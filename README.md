@@ -1,15 +1,18 @@
-#  Repository title
+#  Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti
 
 ---
-## Authors
-* Vojtěch Kaše
+## Autor
+* Vojtěch Kaše (kase@kfi.zcu.cz; [[website](https://vojtechkase.cz)]
 
 
 ## License
 CC-BY-SA 4.0, see attached License.md
 
 ---
-# Getting started
+# Popis
+
+Právě jste se ocitly na domovské stránce projektu **Příběhy dat**. Jedná se o *elektronickou studijní oporu* ke k předmětu UDHB: Úvod do digitálních humanitních věd vyučovaném na FF ZČU. 
+
 
 * download or clone the repository
 * go to Terminal and move to that directory
