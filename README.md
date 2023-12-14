@@ -11,9 +11,19 @@ CC-BY-SA 4.0, see attached License.md
 ---
 # Popis
 
-Právě jste se ocitly na domovské stránce projektu **Příběhy dat**. Jedná se o *elektronickou studijní oporu* ke k předmětu UDHB: Úvod do digitálních humanitních věd vyučovaném na FF ZČU. 
+Právě jste se ocitli na domovské stránce projektu *Příběhy dat*. Jedná se o sestavu *elektronických, 
+multimediálních a interaktivních studijních opor* vytvořených pro potřeby výuky v oblasti výpočetních přístupů
+ke studiu kultury a společnosti. Tyto přístupy spadají typicky pod něco, čemu se dnes říká *digital humanities*, 
+nebo - chcete-li - digitální humanitních věd. Podíváme-li se však letmo na některé významné publikace z oblasti tzv.
+digital humanities (např. [^1]), zjistíme, že toto označení 
 
 
+[^1]: Debates in the digital humanities 2023. (2023). University of Minnesota Press.
+
+
+
+
+. *digital humanities* na Zapadočeské univerzitě v 
 * download or clone the repository
 * go to Terminal and move to that directory
 * run the following bash commands (modify the `$VENVNAME` variable value as you wish):
