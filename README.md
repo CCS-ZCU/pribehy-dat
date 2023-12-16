@@ -23,7 +23,9 @@ a to z několika důvodů. Zaprvé a především, pohlédneme-li do některých
 digital humanities (např. [^1]), zjistíme, že toto označení je značně široké a skrývá se za ním podstatně větší šíře
 činností než jen využití výpočetních metod ke studiu kultury a společnosti, které zde zajímají nás. 
 Podle některých autorů pod digital humanities spadá i humanitně-vědná reflexe dopadu informačních technologií na současnou 
-kulturní produkci atú.
+kulturní produkci atp.
+
+### Výpočetní metody a digital humanities
 
 Ústředním tématem digital humanities je nepochybně *digitalizace* kulturních děl a jejich zpřístupňování široké veřejnosti.
 Zde máme na mysli např. vytváření různých digitálních archivů literárních děl či online galerií výtvarného umění. V této
@@ -49,6 +51,8 @@ používají termíny jako jsou *computational humanities* či *cultural analyti
 je často výrazně větší než v případě tradičních humanitních věd, které se často zaměřují na interprataci kulturního jednání 
 jednotlivců, tyto přístupy se současně překrývají i s tzv. *computational social science*. 
 
+### Badatelská imaginace a základní koncepty digitalizace kulturních dat
+
 Tím se již dostáváme ke stanovení hlavních cílů tohoto souboru interaktivních studijních opor. 
 Je jím na jedné straně (1) *prohloubení badatelské imaginace* studenta humanitního zaměření o možnost využití 
 výpočetních metod pro práci s kulturními data a (2) *praktické osvojení si* základních konceptů digitalizace těchto
@@ -62,15 +66,62 @@ Jelikož tvůrci digitalizovaných dat působící například jako pracovníci 
 jsou typicky absolventy humanitních oborů, jsou studenti těchto oborů přirozenou
 cílovou skupinou pro osvojování si těchto znalostí a dovedností.
 
+### Příběhy dat
+
 Tento soubor učebních opor je nazván "Příběhy dat". Již mnoho historiků si povšimlo, že v jádru práce historika není pouze 
 *zjistit*, co a jak se skutečně stalo ("Wie es eigentlich gewesen," jak pravil klasik), ale také to sdělit ostatním. 
-Toto sdělení má formu vyprávění (na rozdíl od přírodních věd, kde je možné podat vysvětlení i prostřednictvím určitého 
+Toto sdělení zde má formu vyprávění (na rozdíl od přírodních věd, kde je možné podat vysvětlení i prostřednictvím určitého 
 formálního vyjádření). Má-li tedy humanitní badatel analyzující kulturní data za využití výpočetních metod
-učinit za dost tomuto poslání, neměl by zapomenout podat své závěry ve formě vyprávění či příběhu. -> Datová žurnalistika.
+učinit za dost tomuto poslání, neměl by zapomenout podat své závěry ve formě vyprávění či příběhu. 
 
-Další důležitou lekcí, kterou si zde osvojíme, je, že v našem případě neexistuje nic takového jako "syrová data" 
-("Raw data is an oxymoron", hlásá název jednoho známé studie [^]). Za každými daty se skrývá určitý model, soubor 
-určitých teoretických předpokládů, které rozhodly o tom, že daný jev je zde reprezentován tímto a ne jiným způsobem.
+Zde lze nalézt určité paralely s takzvanou *datovou žurnalistikou* 
+[[wikipedia](https://cs.wikipedia.org/wiki/Datová_žurnalistika)]. Datová žurnalistika se snaží srozimetlnou formou 
+běžnému čtenáři předat náhledy získané z analýzy rozsáhlých datových souborů (např. z demografických datových sad 
+od Českého statistického úřadu), a to s pomocí nejrůznějších  vizualizací, map, grafů či interkativních aplikací. 
+Jelikož jsou tyto analýzy určeny široké veřejnosti, je nutné, aby vše bylo popsáno v co nejvíce srozumitelné formě. 
+Obdobný důraz je kladen i v případě datových analýz v humanitních vědách.
+
+### Kulturní data
+
+V tomto souboru elektronických opor se budeme zabývat  tím, jak pracovat s daty z olbasti kulturního dědictví. 
+Jak jsou tato data vytvářena a zpracovávána v procesu digitalizace a především, jak mohou být analyzována 
+a interpretována s pomocí výpočetních metod. Avšak co to vůbec jsou data, o kterých zde mluvíme? Než přejdeme k samotné 
+definice, je potřeba učinit některá rozlišení. Jako humanitní či sociální vědce nás totiž data nezajímají 
+data pro ně samozná, ale kvůli tomu, co se díky nim můžeme dozvědět o člověku, lidské kultuře a společnosti. Chceme 
+například proniknout do myšlenkového světa významného literárního autora, osvětlit příčiny zániku dávné společnosti, 
+
+
+Existuje nepřeběrně
+mnoho definic tohoto termínu. My zde budeme pracovat s definicí, podle které data 
+jsou typem informací, které mohou být opakovaně předávány, aniž by došlo k informační ztrátě.
+Tím se chce říct, 
+že data 
+
+
+
+### "Syrová" data?
+
+Další důležitým poznatkem, který si zde osvojíme, je, že v našem případě neexistuje nic takového jako "syrová data" 
+("Raw data is an oxymoron", stojí v názvu známé studie [^]). Za každými daty se skrývá určitý model, soubor 
+určitých teoretických předpokládů, které jsou zodpovědné za to, že daný jev je zde reprezentován tímto a ne jiným 
+způsobem, což má zřejmé důsledky pro možnosti použití těchto dat. Datová reprezentace určitého kulturního artefaktu 
+(např. digitální fotografie
+výtvarného díla) nezachycuje onen kulturní artefakt v jeho celistvosti, ale pouze určitého jeho aspekty. Např. malba 
+není v přísném slova smyslu dvoudimezionální objekt, neboť více vrstvená místa vystupují do prostoru, 
+což má zřejmé dopady na odraz světla od tohoto objektu. Tento rozměr se však u její digitální reprezentace ztrácí. 
+Dále je tato  reprezentace omezena rozlišením dané fotografie, které může zvláště v případě
+velkých pláten představovat zřejmé omezení. Další informace podstatné pro historika výtvarného umění jsou nepochybně 
+spjaty s materiálem, na kterém je dílo vyobrazeno, či s jeho záramováním. V případě digitální reprezentace se však 
+odborník těchto informací nedobere buď vůbec, a nebo jen zprostředkovaně (viz např. namátkou [zde](https://www.esbirky.cz/predmet/19629759?searchParams=%7B%22filter%22%3A%7B%22origin%22%3A%5B%2217143%22%5D%2C%22type%22%3A%5B%2217116%22%5D%7D%2C%22order%22%3A%22name%22%2C%22itemsPerPage%22%3A24%2C%22path%22%3A%22eJyVzTsLwjAUhuG%5C%2FEs4caOOl0oK4ujg6GYfT5lhD0gtpFErxvxtbdCh0cPzg43kvA9RYEWRwtKTQs7ZRljLm%2B5Z1uXzEMSlneuBgdW3CTUb38SijcDk0Tpe63oud2KzhxQfQCrKw4hX%5C%2FuucqKELklgozeukMLtBT2bg%2BfANJCykZjexiUSS%5C%2F4gnt5H%5C%2FC27Tzz2lyZhx1OTJkpcObNvhfXSSz%2BvUNUnRkyA%3D%3D%22%7D&sequencePointer=12)).
+
+Na obdobná omezení narazíme v případě digitalizovaných knih. Jaký typ informací je například zachycen 
+v digitalizované verzi antického rukopisu? V některých případech se setkáme pouze s holým přepisem samotného textu, 
+ze kterého však často nevyčteme mnohé kontextuální informace, které mohou být pro humanitně vědného badatele velice 
+zajímavé a podstatné. Např. jaké jsou rozměry daného rukopisu, kde končí a začíná řádka, kde je použito větší písmo atp.  
+
+Těchto a podobných omezení si musíme být vědomi, když s těmito daty pracujeme nejen jako odborníci, ale také jako 
+datoví analytici. Digitální datové reprezentace kulturních artefaktů nejsou těmito artefakty samotnými.
+
 
 Formát
 
