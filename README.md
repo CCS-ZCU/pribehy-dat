@@ -193,7 +193,7 @@ vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovanýc
 
 *6. GIS: Analýza prostorových dat* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/gis.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/gis.html)]
 
-*7. Regulérní výrazy* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/regex.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/regex.html)]
+*7. Regulární výrazy* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/regex.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/regex.html)]
 
 *8. TEI-XML: Digitální edice* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/tei.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/tei.html)]
 
