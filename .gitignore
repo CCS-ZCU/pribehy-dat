@@ -1,3 +1,4 @@
 /data/large_files/
 /pribehy_venv/
 .env
+.DS_Store
