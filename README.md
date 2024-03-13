@@ -14,16 +14,16 @@ CC-BY-SA 4.0, see attached License.md
 
 ### Úvod
 
-Tento dokument představuje průvodní text k sestavě elektronických, multimediálních a interaktivních studijních opor* vytvořených pro potřeby výuky výpočetních přístupů ke studiu kultury a společnosti na Západočeské univerzitě v Plzni. Tyto studijní opory byly vytvořeny primárně pro studenty humanitního či společensko-vědního zaměření v různých stádiích studia, ale mohou v určitém ohledu posloužit
-i studentům technických oborů či zájomcům z široké veřejnosti. Jedntolivé kapitaly mají formu tzv. Jupyter notebooků (viz níže), v nichž se studenti prakticky a interkativní formou obeznamují s klíčovými koncepty pro vytváření kulturních dat, získávání již digitalizovaných kulturních dat z otevřených zdrojů a následnou analytickou práci s těmito  v podobě jejich třízení, filtrování, analýzy a vizualizace.
+Tento dokument představuje průvodní text k sestavě *elektronických, multimediálních a interaktivních studijních opor* vytvořených pro potřeby výuky výpočetních přístupů ke studiu kultury a společnosti na Západočeské univerzitě v Plzni. Tyto studijní opory byly vytvořeny primárně pro studenty humanitního či společensko-vědního zaměření v různých stádiích studia, ale mohou v určitém ohledu posloužit
+i studentům technických oborů či zájemcům z široké veřejnosti. Jedntolivé kapitoly mají formu tzv. Jupyter notebooků (viz níže), v nichž se studenti prakticky a interkativní formou obeznamují s klíčovými koncepty pro vytváření kulturních dat, získávání již digitalizovaných kulturních dat z otevřených zdrojů a následnou analytickou práci s těmito daty v podobě jejich třízení, filtrování, analýzy a vizualizace.
 
 ### Cíle
 
-Hlavní cíle této sestavy studijních opor jsou studenty prakticky obeznámit s následujícími tématy:
+Hlavním cílem této sestavy studijních opor je studenty prakticky obeznámit s následujícími tématy:
 
 * Digitalizace kulturních dat (OCR, tvorba digitálních edic apod.)
 * Získávání a vytěžování digitalizovaných kulturních dat (HTTP, API)
-* Čičtění, třízení a další zpracování kulturních dat (regulérní výrazy, NLP apod.)
+* Čištění, třízení a další zpracování kulturních dat (regulární výrazy, NLP apod.)
 * Analýza a vizualizace digitalizovaných kulturních dat (GIS, síťová analýza apod.)
 
 ### Výpočetní metody a digital humanities
@@ -56,22 +56,22 @@ I to je však pouze začátek. Dalším krokem jsou různé kvantitativní anal�
 formálních či obsahových podobností mezi jednotlivými texty či zkoumání vývojových či prostorových trendů.
 Zde již není středobodem našeho zájmu samotná digitalizace a dostupnost příslušných datových souborů, ale potenciál
 výpočetních metod pro jejich analýzu. Namísto *digital humanities* proto v tomto kontextu někteří badatelé raději
-používají termíny jako jsou *computational humanities* či *cultural analytics*. Jelikož měřítko těchto analýz
+používají termíny jako *computational humanities* či *cultural analytics*. Jelikož měřítko těchto analýz
 je často výrazně větší než v případě tradičních humanitních věd, které se často zaměřují na interprataci kulturního
-jednání ednotlivců, tyto přístupy se současně překrývají i s tzv. *computational social science*, které zajímají spíše
+jednání jednotlivců, tyto přístupy se současně překrývají i s tzv. *computational social science*, kterou zajímají spíše
 širší společenské trendy.
 
 ### Badatelská imaginace a základní koncepty digitalizace kulturních dat
 
 Tím se již dostáváme k bližšímu osvětlení hlavních cílů tohoto souboru interaktivních studijních opor.
-Je jimi kromě *praktického osvojení si* základních konceptů digitalizace kulturních dat (viz sekce cíle), toziž také něco, co můžeme nazvat *prohloubením badatelské imaginace* studenta humanitního zaměření o možnost využití
+Je jimi kromě *praktického osvojení si* základních konceptů digitalizace kulturních dat (viz sekce Cíle) totiž také něco, co můžeme nazvat *prohloubením badatelské imaginace* studenta humanitního zaměření o možnost využití
 výpočetních metod pro práci s kulturními daty.
 
 Tyto dva cíle jsou úzce provázané. Ukazuje se totiž, že právě nedostatek toho, co zde nazýváme
 *badatelskou imaginací* v oblasti výpočetních metod mezi tvůrci digitalizovaných kulturních dat je důvodem pro to,
 proč některé digitalizační projekty neumožňují tak široké využití jimi zpřístupněných dat, jaké by mohly. Problémem je,
 že bez představy o tom, jak by bylo možné daná data analyticky využít, jsou během digitalizace a zpřístupňování
-často učiněna  zdánlivě nevinná rozhodnutí, která následně badatelům využívajícím výpočetní metody značně stěžují
+často učiněna  zdánlivě nevinná rozhodnutí, která následně badatelům využívajícím výpočetní metody značně ztěžují
 práci - příklady těchto rozhodnutí si v jednotlivých studujních oporách opakovaně ukážeme.
 Jelikož tvůrci digitalizovaných dat působící například jako pracovníci v institucích péče o kulturní dědictví
 jsou typicky absolventy humanitních oborů, jsou studenti těchto oborů přirozenou
@@ -181,6 +181,7 @@ tyto znalosti a dovednosti osvojit, než právě skrz přímou interakci s kóde
 vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovaných funkcí.
 
 ### Obsah
+
 *1. Jupyter: Stručný úvod* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/jupyter.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/jupyter.html)]
 
 *2. Python: Základní proměnné, funkce a datové struktury* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/python.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/python.html)]
@@ -202,7 +203,6 @@ vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovanýc
 *10. PDF: Extrakce textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/pdf.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/pdf.html)]
 
 *11. OCR: Rozpoznávání znaků textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/ocr.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/ocr.html)]
-
 
 ### Odkazy
 
