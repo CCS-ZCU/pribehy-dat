@@ -8126,7 +8126,7 @@ Podívejme se nyní v krátkosti, jak tento dataset vypadá. Oomocí metody <cod
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Samostatn%C3%BD-%C3%BAkol:-po%C4%8Det-a-hustota-%C5%99eck%C3%BDch-n%C3%A1pis%C5%AF-uvnit%C5%99-jednotliv%C3%BDch-provinci%C3%AD:">Samostatný úkol: počet a hustota řeckých nápisů uvnitř jednotlivých provincií:<a class="anchor-link" href="#Samostatn%C3%BD-%C3%BAkol:-po%C4%8Det-a-hustota-%C5%99eck%C3%BDch-n%C3%A1pis%C5%AF-uvnit%C5%99-jednotliv%C3%BDch-provinci%C3%AD:">¶</a></h1><p>Povšimli jsme si, že dataset řeckých nápisů <code>GIST</code> má obdobnou strukturu jako dataset latinských nápisů <code>LIST</code>.</p>
-<p>V případě latinských nápisů jsme výše také spočítali jejich počet uvnitř jednotlivých provincií v datasetu <code>provinces</code>, když jsme zde aplikovali funkce <code>contains()</code> a <code>sum()</code>. Dataset <code>provinces</code> jsme tak obohatili o nový atribut s názvem <code>"LIST_n"</code>. Dále jsme vytvořili atribut <code>"area_sk"</code> a nakonec - za využití těchto dvou předchozích atributů - atribut <code>"LIST_density"</code>.</p>
+<p>V případě latinských nápisů jsme výše také spočítali jejich počet uvnitř jednotlivých provincií v datasetu <code>provinces</code>, když jsme zde aplikovali funkce <code>contains()</code> a <code>sum()</code>. Dataset <code>provinces</code> jsme tak obohatili o nový atribut s názvem <code>"LIST_n"</code>. Dále jsme vytvořili atribut <code>"area_km2"</code> a nakonec - za využití těchto dvou předchozích atributů - atribut <code>"LIST_density"</code>.</p>
 <p>Vašim <strong>samostatným úkolem</strong> nyní je obohatit dataset <code>provinces</code> o dva další atributy, které budou obsahovat informace o počtech a hustotě řeckých nápisů z datasetu <code>GIST</code>. Nazvete je <code>"GIST_n"</code> a "<code>GIST_density</code>".</p>
 <p>(Nápověda: V zásadě jde o to buněk níže zkopírovat a mírně poupravit několik řádek kódu, které jsme použili výše k vytvoření atributů <code>"LIST_n"</code> a <code>"LIST_density"</code>.)</p>
 </div>
@@ -8171,7 +8171,7 @@ Podívejme se nyní v krátkosti, jak tento dataset vypadá. Oomocí metody <cod
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-python"><pre><span></span><span class="c1"># ÚKOL 2:</span>
-<span class="c1"># přidejme k datasetu provinces atribut "GIST_density" (počty nápisů v atributu "GIST_n" vydělíme hustutou v atributu "area_sk" - viz obdobný výpočet výše v případě latinských nápisů)</span>
+<span class="c1"># přidejme k datasetu provinces atribut "GIST_density" (počty nápisů v atributu "GIST_n" vydělíme hustutou v atributu "area_km2" - viz obdobný výpočet výše v případě latinských nápisů)</span>
 </pre></div>
 </div>
 </div>
