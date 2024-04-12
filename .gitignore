@@ -1,5 +1,6 @@
 /data/large_files/
 /data/KDDHB_students.csv
+/data/UDHB_students.csv
 /pribehy_venv/
 /management/kontrola.ipynb
 .env
