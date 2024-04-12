@@ -1,4 +1,6 @@
 /data/large_files/
+/data/KDDHB_students.csv
 /pribehy_venv/
+/management/kontrola.ipynb
 .env
 .DS_Store
