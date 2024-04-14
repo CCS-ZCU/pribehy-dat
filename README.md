@@ -181,7 +181,6 @@ tyto znalosti a dovednosti osvojit, než právě skrz přímou interakci s kóde
 vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovaných funkcí.
 
 ### Obsah
-
 *1. Jupyter: Stručný úvod* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/jupyter.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/jupyter.html)]
 
 *2. Python: Základní proměnné, funkce a datové struktury* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/python.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/python.html)]
@@ -203,6 +202,9 @@ vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovanýc
 *10. PDF: Extrakce textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/pdf.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/pdf.html)]
 
 *11. OCR: Rozpoznávání znaků textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/ocr.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/ocr.html)]
+
+*12. ABM: Modelování založené na agentech* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/abm.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/abm.html)]
+
 
 ### Odkazy
 

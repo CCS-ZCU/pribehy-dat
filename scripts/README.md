@@ -21,5 +21,7 @@
 
 *11. OCR: Rozpoznávání znaků textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/ocr.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/ocr.html)]
 
+*12. ABM: Modelování založené na agentech* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/abm.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/abm.html)]
+
 
 ###
