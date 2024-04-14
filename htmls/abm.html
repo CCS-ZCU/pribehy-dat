@@ -7486,7 +7486,7 @@ a.anchor-link {
 <p><a href="https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/abm.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
 <h1 id="ABM:-Modelov%C3%A1n%C3%AD-zalo%C5%BEen%C3%A9-na-agentech">ABM: Modelování založené na agentech<a class="anchor-link" href="#ABM:-Modelov%C3%A1n%C3%AD-zalo%C5%BEen%C3%A9-na-agentech">¶</a></h1><p><strong>autor</strong>: <em>Vojtěch Kaše</em> (kase@ff.zcu.cz)</p>
 <p><a href="https://ccs.zcu.cz"><img alt="" src="https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png"/></a></p>
-<h2 id="%C3%9Avod-a-c%C3%ADle-kapitoly">Úvod a cíle kapitoly<a href="https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/11_agentove-simulace.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a><a class="anchor-link" href="#%C3%9Avod-a-c%C3%ADle-kapitoly">¶</a></h2>
+<h2 id="%C3%9Avod-a-c%C3%ADle-kapitoly">Úvod a cíle kapitoly<a class="anchor-link" href="#%C3%9Avod-a-c%C3%ADle-kapitoly">¶</a></h2>
 </div>
 </div>
 </div>
@@ -7497,9 +7497,16 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>V tomto cvičení
-This notebook presents an agent-based model of segregation dynamics.
-It demonstrates how to use the <a href="https://agentpy.readthedocs.io">agentpy</a> package to work with a spatial grid and create animations. Based on <a href="https://agentpy.readthedocs.io/en/latest/agentpy_segregation.html">this</a>.</p>
+<p>Toto cvičení nás uvádí do metodologie sociálních simulací, nebo přesně ABM (=agent based modeling). Konkrétně budeme pracovat s jedním velice známým modelem, který navhrl již počátkem 70. let americký ekonom <a href="https://en.wikipedia.org/wiki/Thomas_Schelling">Thomas Schelling</a>. Tento model na velice abstraktní úrovni ukazuje, jak i v zásadě tolerantní prostředí může vést k segregaci společnosti. Základem modelu je množina agentů (lidí), kteří jsou rozmístěni v určitém prostoru ve formě jakési mřížky či šachovnice. Základní vlastností každého agenta je, že má informaci o tom, kolik jeho sousedů (agentů na okolních buňkách mřížky) je ze stejné nebo odlišné skupiny než on, což je typicky odlišeno barvou. Tato informace je základem binárního atributu spokojenosti: Agent je spokojený tehdy, pokud je alespoň určité procento jeho sousedů (např. 30 %) ze stejné skupiny (barvy) jako on.</p>
+<p>Model poté probíhá v několika po sobě jdoucích krocích:</p>
+<ul>
+<li>Inicializace: Agenti jsou náhodně rozmístěni v prostoru.</li>
+<li>Akce: Každý agent zvažuje své okolí a rozhoduje se, zda je spokojen se svým umístěním. Pokud je spokojen, nic nedělá. Pokud není spokojen, náhodně se přesouvá na jiné volné místo.</li>
+<li>Aktualizace: Provede se aktualizace stavu prostředí.</li>
+</ul>
+<p>Tento proces se opakuje, dokud není dosaženo stabilního stavu, kdy už žádný agent nemá potřebu se přesunout, tj. všichni agenti jsou spokojeni. Výsledkem tohoto modelu může být zajímavé chování, kde malé individuální preference vedou k výrazné segregaci v populaci, přestože žádný jednotlivec nemá silnou preferenci pro segregaci.</p>
+<p>Tento model je ve známé podobě implementován v programu netlogo (<a href="https://www.netlogoweb.org/launch#https://www.netlogoweb.org/assets/modelslib/Sample%20Models/Social%20Science/Segregation.nlogo">Segregation</a>), kde je možné si k němu načíst dovysvětlující informace.</p>
+<p>Na rozdíl od jiných cvičení v této sestavě elektronických opor, toto cvičení je přejato téměř beze změny z dokumentace ke knihovně <a href="https://agentpy.readthedocs.io">agentpy</a> (viz <a href="https://agentpy.readthedocs.io/en/latest/agentpy_segregation.html">zde</a>), odkud je převzat i průvodní text v angličtině.</p>
 </div>
 </div>
 </div>
