@@ -7525,7 +7525,7 @@ a.anchor-link {
 <span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">gensim</span>
 <span class="kn">import</span> <span class="nn">stanza</span>
 <span class="n">stanza</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
-<span class="n">nlp</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
+<span class="n">czech_pipeline</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="kn">import</span> <span class="n">urlopen</span> <span class="c1"># pro práci w webovými adresami</span>
 <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span> <span class="c1"># pro práci s webovými stránkami ve formátu html</span>
@@ -7682,7 +7682,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7690,8 +7690,204 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sent</span> <span class="o">=</span> <span class="s2">"Česká republika je velmi sebevědomý stát, který dokáže stát na vlastních nohách."</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
+<span class="n">doc</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[
+  [
+    {
+      "id": 1,
+      "text": "Česká",
+      "lemma": "český",
+      "upos": "ADJ",
+      "xpos": "AAFS1----1A----",
+      "feats": "Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos",
+      "head": 2,
+      "deprel": "amod",
+      "start_char": 0,
+      "end_char": 5
+    },
+    {
+      "id": 2,
+      "text": "republika",
+      "lemma": "republika",
+      "upos": "NOUN",
+      "xpos": "NNFS1-----A----",
+      "feats": "Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos",
+      "head": 6,
+      "deprel": "nsubj",
+      "start_char": 6,
+      "end_char": 15
+    },
+    {
+      "id": 3,
+      "text": "je",
+      "lemma": "být",
+      "upos": "AUX",
+      "xpos": "VB-S---3P-AAI--",
+      "feats": "Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
+      "head": 6,
+      "deprel": "cop",
+      "start_char": 16,
+      "end_char": 18
+    },
+    {
+      "id": 4,
+      "text": "velmi",
+      "lemma": "velmi",
+      "upos": "ADV",
+      "xpos": "Db-------------",
+      "head": 5,
+      "deprel": "advmod",
+      "start_char": 19,
+      "end_char": 24
+    },
+    {
+      "id": 5,
+      "text": "sebevědomý",
+      "lemma": "sebevědomý",
+      "upos": "ADJ",
+      "xpos": "AAIS1----1A----",
+      "feats": "Animacy=Inan|Case=Nom|Degree=Pos|Gender=Masc|Number=Sing|Polarity=Pos",
+      "head": 6,
+      "deprel": "amod",
+      "start_char": 25,
+      "end_char": 35
+    },
+    {
+      "id": 6,
+      "text": "stát",
+      "lemma": "stát",
+      "upos": "NOUN",
+      "xpos": "NNIS1-----A----",
+      "feats": "Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing|Polarity=Pos",
+      "head": 0,
+      "deprel": "root",
+      "start_char": 36,
+      "end_char": 40
+    },
+    {
+      "id": 7,
+      "text": ",",
+      "lemma": ",",
+      "upos": "PUNCT",
+      "xpos": "Z:-------------",
+      "head": 9,
+      "deprel": "punct",
+      "start_char": 40,
+      "end_char": 41
+    },
+    {
+      "id": 8,
+      "text": "který",
+      "lemma": "který",
+      "upos": "DET",
+      "xpos": "P4YS1----------",
+      "feats": "Case=Nom|Gender=Masc|Number=Sing|PronType=Int,Rel",
+      "head": 9,
+      "deprel": "nsubj",
+      "start_char": 42,
+      "end_char": 47
+    },
+    {
+      "id": 9,
+      "text": "dokáže",
+      "lemma": "dokázat",
+      "upos": "VERB",
+      "xpos": "VB-S---3P-AAP--",
+      "feats": "Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
+      "head": 6,
+      "deprel": "acl:relcl",
+      "start_char": 48,
+      "end_char": 54
+    },
+    {
+      "id": 10,
+      "text": "stát",
+      "lemma": "stát",
+      "upos": "VERB",
+      "xpos": "Vf--------A-P--",
+      "feats": "Aspect=Perf|Polarity=Pos|VerbForm=Inf",
+      "head": 9,
+      "deprel": "xcomp",
+      "start_char": 55,
+      "end_char": 59
+    },
+    {
+      "id": 11,
+      "text": "na",
+      "lemma": "na",
+      "upos": "ADP",
+      "xpos": "RR--6----------",
+      "feats": "AdpType=Prep|Case=Loc",
+      "head": 13,
+      "deprel": "case",
+      "start_char": 60,
+      "end_char": 62
+    },
+    {
+      "id": 12,
+      "text": "vlastních",
+      "lemma": "vlastní",
+      "upos": "ADJ",
+      "xpos": "AAFP6----1A----",
+      "feats": "Case=Loc|Degree=Pos|Gender=Fem|Number=Plur|Polarity=Pos",
+      "head": 13,
+      "deprel": "amod",
+      "start_char": 63,
+      "end_char": 72
+    },
+    {
+      "id": 13,
+      "text": "nohách",
+      "lemma": "noha",
+      "upos": "NOUN",
+      "xpos": "NNFP6-----A----",
+      "feats": "Case=Loc|Gender=Fem|Number=Plur|Polarity=Pos",
+      "head": 10,
+      "deprel": "obl",
+      "start_char": 73,
+      "end_char": 79
+    },
+    {
+      "id": 14,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "xpos": "Z:-------------",
+      "head": 6,
+      "deprel": "punct",
+      "start_char": 79,
+      "end_char": 80
+    }
+  ]
+]</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># vytvoříme morfoligicky zpracovanou verzi našeho textu a konvenčně si ji uložíme do proměnně `doc`.  </span>
-<span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text_dokumentu</span><span class="p">)</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">text_dokumentu</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7713,7 +7909,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
@@ -7749,7 +7945,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">lemmatized_sentences</span> <span class="o">=</span> <span class="p">[]</span>
@@ -7769,7 +7965,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">lemmatized_sentences</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
@@ -7794,7 +7990,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># nejprve si z naší filtrované tabulky vyxtrahujeme lemmata samotná</span>
@@ -7825,7 +8021,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># kvůli horizontálnímu zobrazení prohodíme pořadí na našem listu</span>
@@ -7865,7 +8061,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">vocabulary</span> <span class="o">=</span> <span class="p">[</span><span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">lemmata_freq</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">100</span><span class="p">)]</span>
@@ -7884,7 +8080,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">kontrola_pruchodu</span><span class="p">(</span><span class="n">ntb</span><span class="o">=</span><span class="s2">"nlp"</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
@@ -7933,7 +8129,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_patocka</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
@@ -7974,7 +8170,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">base_url</span> <span class="o">=</span> <span class="s2">"https://archiv.janpatocka.cz/items/browse?tags=fulltext&amp;page="</span>
@@ -8002,7 +8198,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">docs_urls</span> <span class="o">=</span> <span class="p">[]</span>
@@ -8033,7 +8229,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">docs_urls</span><span class="p">)</span>
@@ -8047,7 +8243,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">docs_urls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">docs_urls</span><span class="p">))</span>
@@ -8062,7 +8258,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">docs_urls</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
@@ -8087,7 +8283,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1">#data = []</span>
@@ -8117,12 +8313,12 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_lemmatized_sents</span><span class="p">(</span><span class="n">rawtext</span><span class="p">):</span>
   <span class="k">try</span><span class="p">:</span>
-    <span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">rawtext</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">)</span>
     <span class="n">lemmatized_sentences</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">sentences</span><span class="p">:</span>
         <span class="n">sentence_lemmata</span> <span class="o">=</span> <span class="p">[]</span>
@@ -8143,7 +8339,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1">#patocka_all_df["lemmatized_sents"] = patocka_all_df["rawtext"].apply(get_lemmatized_sents)</span>
@@ -8158,7 +8354,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s2">"https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json"</span><span class="p">)</span>
@@ -8173,7 +8369,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span><span class="o">.</span><span class="n">shape</span>
@@ -8187,7 +8383,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">all_sents</span> <span class="o">=</span> <span class="p">[</span><span class="n">sent</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">patocka_all_df</span><span class="p">[</span><span class="s2">"lemmatized_sents"</span><span class="p">]</span> <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">]</span>
@@ -8196,20 +8392,6 @@ a.anchor-link {
 <span class="n">lemmata_freqs</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">FreqDist</span><span class="p">(</span><span class="n">lemmata_flat</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">()</span>
 <span class="n">vocabulary</span> <span class="o">=</span> <span class="p">[</span><span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">lemmata_freqs</span><span class="p">][:</span><span class="mi">500</span><span class="p">]</span>
 <span class="n">lemmata_freqs</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">docs</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
