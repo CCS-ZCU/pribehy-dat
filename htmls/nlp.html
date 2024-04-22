@@ -7484,6 +7484,7 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><a href="https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/nlp.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<p>Tento soubor je součástí sestavy elektronických studijních opor <a href="https://github.com/CCS-ZCU/pribehy-dat/tree/master">Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti</a>.</p>
 <h1 id="NLP:-Zpracov%C3%A1n%C3%AD-p%C5%99irozen%C3%A9ho-jazyka">NLP: Zpracování přirozeného jazyka<a class="anchor-link" href="#NLP:-Zpracov%C3%A1n%C3%AD-p%C5%99irozen%C3%A9ho-jazyka">¶</a></h1><p><strong>autor</strong>: <em>Vojtěch Kaše</em> (kase@ff.zcu.cz)</p>
 <p><a href="https://ccs.zcu.cz"><img alt="" src="https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png"/></a></p>
 <h2 id="%C3%9Avod-a-c%C3%ADle-kapitoly">Úvod a cíle kapitoly<a class="anchor-link" href="#%C3%9Avod-a-c%C3%ADle-kapitoly">¶</a></h2>
@@ -7682,7 +7683,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7694,186 +7695,6 @@ a.anchor-link {
 <span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
 <span class="n">doc</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
-<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>[
-  [
-    {
-      "id": 1,
-      "text": "Česká",
-      "lemma": "český",
-      "upos": "ADJ",
-      "xpos": "AAFS1----1A----",
-      "feats": "Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos",
-      "head": 2,
-      "deprel": "amod",
-      "start_char": 0,
-      "end_char": 5
-    },
-    {
-      "id": 2,
-      "text": "republika",
-      "lemma": "republika",
-      "upos": "NOUN",
-      "xpos": "NNFS1-----A----",
-      "feats": "Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos",
-      "head": 6,
-      "deprel": "nsubj",
-      "start_char": 6,
-      "end_char": 15
-    },
-    {
-      "id": 3,
-      "text": "je",
-      "lemma": "být",
-      "upos": "AUX",
-      "xpos": "VB-S---3P-AAI--",
-      "feats": "Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
-      "head": 6,
-      "deprel": "cop",
-      "start_char": 16,
-      "end_char": 18
-    },
-    {
-      "id": 4,
-      "text": "velmi",
-      "lemma": "velmi",
-      "upos": "ADV",
-      "xpos": "Db-------------",
-      "head": 5,
-      "deprel": "advmod",
-      "start_char": 19,
-      "end_char": 24
-    },
-    {
-      "id": 5,
-      "text": "sebevědomý",
-      "lemma": "sebevědomý",
-      "upos": "ADJ",
-      "xpos": "AAIS1----1A----",
-      "feats": "Animacy=Inan|Case=Nom|Degree=Pos|Gender=Masc|Number=Sing|Polarity=Pos",
-      "head": 6,
-      "deprel": "amod",
-      "start_char": 25,
-      "end_char": 35
-    },
-    {
-      "id": 6,
-      "text": "stát",
-      "lemma": "stát",
-      "upos": "NOUN",
-      "xpos": "NNIS1-----A----",
-      "feats": "Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing|Polarity=Pos",
-      "head": 0,
-      "deprel": "root",
-      "start_char": 36,
-      "end_char": 40
-    },
-    {
-      "id": 7,
-      "text": ",",
-      "lemma": ",",
-      "upos": "PUNCT",
-      "xpos": "Z:-------------",
-      "head": 9,
-      "deprel": "punct",
-      "start_char": 40,
-      "end_char": 41
-    },
-    {
-      "id": 8,
-      "text": "který",
-      "lemma": "který",
-      "upos": "DET",
-      "xpos": "P4YS1----------",
-      "feats": "Case=Nom|Gender=Masc|Number=Sing|PronType=Int,Rel",
-      "head": 9,
-      "deprel": "nsubj",
-      "start_char": 42,
-      "end_char": 47
-    },
-    {
-      "id": 9,
-      "text": "dokáže",
-      "lemma": "dokázat",
-      "upos": "VERB",
-      "xpos": "VB-S---3P-AAP--",
-      "feats": "Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
-      "head": 6,
-      "deprel": "acl:relcl",
-      "start_char": 48,
-      "end_char": 54
-    },
-    {
-      "id": 10,
-      "text": "stát",
-      "lemma": "stát",
-      "upos": "VERB",
-      "xpos": "Vf--------A-P--",
-      "feats": "Aspect=Perf|Polarity=Pos|VerbForm=Inf",
-      "head": 9,
-      "deprel": "xcomp",
-      "start_char": 55,
-      "end_char": 59
-    },
-    {
-      "id": 11,
-      "text": "na",
-      "lemma": "na",
-      "upos": "ADP",
-      "xpos": "RR--6----------",
-      "feats": "AdpType=Prep|Case=Loc",
-      "head": 13,
-      "deprel": "case",
-      "start_char": 60,
-      "end_char": 62
-    },
-    {
-      "id": 12,
-      "text": "vlastních",
-      "lemma": "vlastní",
-      "upos": "ADJ",
-      "xpos": "AAFP6----1A----",
-      "feats": "Case=Loc|Degree=Pos|Gender=Fem|Number=Plur|Polarity=Pos",
-      "head": 13,
-      "deprel": "amod",
-      "start_char": 63,
-      "end_char": 72
-    },
-    {
-      "id": 13,
-      "text": "nohách",
-      "lemma": "noha",
-      "upos": "NOUN",
-      "xpos": "NNFP6-----A----",
-      "feats": "Case=Loc|Gender=Fem|Number=Plur|Polarity=Pos",
-      "head": 10,
-      "deprel": "obl",
-      "start_char": 73,
-      "end_char": 79
-    },
-    {
-      "id": 14,
-      "text": ".",
-      "lemma": ".",
-      "upos": "PUNCT",
-      "xpos": "Z:-------------",
-      "head": 6,
-      "deprel": "punct",
-      "start_char": 79,
-      "end_char": 80
-    }
-  ]
-]</pre>
 </div>
 </div>
 </div>
