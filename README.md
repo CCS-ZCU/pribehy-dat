@@ -15,11 +15,11 @@ CC-BY-SA 4.0, see attached License.md
 ### Úvod
 
 Tento dokument představuje průvodní text k sestavě *elektronických, multimediálních a interaktivních studijních opor* vytvořených pro potřeby výuky výpočetních přístupů ke studiu kultury a společnosti na Západočeské univerzitě v Plzni. Tyto studijní opory byly vytvořeny primárně pro studenty humanitního či společensko-vědního zaměření v různých stádiích studia, ale mohou v určitém ohledu posloužit
-i studentům technických oborů či zájemcům z široké veřejnosti. Jedntolivé kapitoly mají formu tzv. Jupyter notebooků (viz níže), v nichž se studenti prakticky a interkativní formou obeznamují s klíčovými koncepty pro vytváření kulturních dat, získávání již digitalizovaných kulturních dat z otevřených zdrojů a následnou analytickou práci s těmito daty v podobě jejich třízení, filtrování, analýzy a vizualizace.
+i studentům technických oborů či zájemcům z široké veřejnosti. Jednotlivé kapitoly mají formu tzv. Jupyter notebooků (viz níže), v nichž se studenti prakticky a interkativní formou obeznamují s klíčovými koncepty pro vytváření kulturních dat, získávání již digitalizovaných kulturních dat z otevřených zdrojů a následnou analytickou práci s těmito daty v podobě jejich třízení, filtrování, analýzy a vizualizace.
 
 ### Cíle
 
-Hlavním cílem této sestavy studijních opor je studenty prakticky obeznámit s následujícími tématy:
+Hlavní cíle této sestavy studijních opor jsou studenty prakticky obeznámit s následujícími tématy:
 
 * Digitalizace kulturních dat (OCR, tvorba digitálních edic apod.)
 * Získávání a vytěžování digitalizovaných kulturních dat (HTTP, API)
@@ -181,6 +181,7 @@ tyto znalosti a dovednosti osvojit, než právě skrz přímou interakci s kóde
 vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovaných funkcí.
 
 ### Obsah
+
 *1. Jupyter: Stručný úvod* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/jupyter.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/jupyter.html)]
 
 *2. Python: Základní proměnné, funkce a datové struktury* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/python.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/python.html)]
@@ -204,7 +205,6 @@ vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovanýc
 *11. OCR: Rozpoznávání znaků textu* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/ocr.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/ocr.html)]
 
 *12. ABM: Modelování založené na agentech* [[ipynb](https://github.com/CCS-ZCU/pribehy-dat/blob/master/scripts/abm.ipynb)] [[html](https://htmlpreview.github.io/?https://github.com/CCS-ZCU/pribehy-dat/blob/master/htmls/abm.html)]
-
 
 ### Odkazy
 
