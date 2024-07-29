@@ -1,0 +1,72 @@
+Launching jupyter-lab
+[W 2024-07-29 05:23:05.961 ServerApp] ServerApp.token config is deprecated in 2.0. Use IdentityProvider.token.
+[I 2024-07-29 05:23:06.045 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2024-07-29 05:23:06.046 ServerApp] jupyter_offlinenotebook | extension was successfully linked.
+[I 2024-07-29 05:23:06.046 ServerApp] jupyter_resource_usage | extension was successfully linked.
+[I 2024-07-29 05:23:06.055 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[W 2024-07-29 05:23:06.058 LabApp] 'base_url' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.058 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.058 LabApp] 'trust_xheaders' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.058 LabApp] 'allow_origin' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.058 LabApp] 'allow_origin_pat' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2024-07-29 05:23:06.066 ServerApp] jupyterlab | extension was successfully linked.
+[W 2024-07-29 05:23:06.148 NotebookApp] 'extra_template_paths' was found in both NotebookApp and ServerApp. This is likely a recent change. This config will only be set in NotebookApp. Please check if you should also config these traits in ServerApp for your purpose.
+[W 2024-07-29 05:23:06.149 NotebookApp] 'jinja_template_vars' was found in both NotebookApp and ServerApp. This is likely a recent change. This config will only be set in NotebookApp. Please check if you should also config these traits in ServerApp for your purpose.
+[W 2024-07-29 05:23:06.149 NotebookApp] 'allow_origin' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.149 NotebookApp] 'shutdown_no_activity_timeout' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2024-07-29 05:23:06.149 NotebookApp] 'tornado_settings' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[I 2024-07-29 05:23:06.156 ServerApp] nbclassic | extension was successfully linked.
+[I 2024-07-29 05:23:06.159 ServerApp] Writing Jupyter server cookie secret to /home/jovyan/.local/share/jupyter/runtime/jupyter_cookie_secret
+[I 2024-07-29 05:23:06.549 ServerApp] notebook_shim | extension was successfully linked.
+[I 2024-07-29 05:23:06.599 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2024-07-29 05:23:06.604 ServerApp] jupyter_lsp | extension was successfully loaded.
+[I 2024-07-29 05:23:06.605 ServerApp] jupyter_offlinenotebook | extension was successfully loaded.
+[I 2024-07-29 05:23:06.606 ServerApp] jupyter_resource_usage | extension was successfully loaded.
+[I 2024-07-29 05:23:06.609 ServerApp] jupyter_server_terminals | extension was successfully loaded.
+[I 2024-07-29 05:23:06.613 LabApp] JupyterLab extension loaded from /srv/conda/envs/notebook/lib/python3.10/site-packages/jupyterlab
+[I 2024-07-29 05:23:06.613 LabApp] JupyterLab application directory is /srv/conda/envs/notebook/share/jupyter/lab
+[I 2024-07-29 05:23:06.613 LabApp] Extension Manager is 'pypi'.
+[I 2024-07-29 05:23:06.650 ServerApp] jupyterlab | extension was successfully loaded.
+
+  _   _          _      _
+ | | | |_ __  __| |__ _| |_ ___
+ | |_| | '_ \/ _` / _` |  _/ -_)
+  \___/| .__/\__,_\__,_|\__\___|
+       |_|
+                                                                           
+Read the migration plan to Notebook 7 to learn about the new features and the actions to take if you are using extensions.
+
+https://jupyter-notebook.readthedocs.io/en/latest/migrate_to_notebook7.html
+
+Please note that updating to Notebook 7 might break some of your extensions.
+
+[I 2024-07-29 05:23:06.657 ServerApp] nbclassic | extension was successfully loaded.
+[I 2024-07-29 05:23:06.658 ServerApp] Will shut down after 600 seconds with no kernels.
+[I 2024-07-29 05:23:06.658 ServerApp] Serving notebooks from local directory: /home/jovyan
+[I 2024-07-29 05:23:06.658 ServerApp] Jupyter Server 2.14.1 is running at:
+[I 2024-07-29 05:23:06.658 ServerApp] http://jupyter-ccs-2dzcu-2dpribehy-2ddat-2dda9hmxko:8888/binder/jupyter/user/ccs-zcu-pribehy-dat-da9hmxko/lab?token=...
+[I 2024-07-29 05:23:06.658 ServerApp]     http://127.0.0.1:8888/binder/jupyter/user/ccs-zcu-pribehy-dat-da9hmxko/lab?token=...
+[I 2024-07-29 05:23:06.658 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[W 2024-07-29 05:23:06.665 ServerApp] No web browser found: Error('could not locate runnable browser').
+[I 2024-07-29 05:23:06.838 ServerApp] 302 GET /binder/jupyter/user/ccs-zcu-pribehy-dat-da9hmxko/ (@194.95.75.9) 1.54ms
+[I 2024-07-29 05:23:08.252 ServerApp] Skipped non-installed server(s): bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
+[I 2024-07-29 05:23:52.363 ServerApp] Writing notebook-signing key to /home/jovyan/.local/share/jupyter/notebook_secret
+[W 2024-07-29 05:23:52.366 ServerApp] Notebook scripts/regex.ipynb is not trusted
+[I 2024-07-29 05:23:52.972 ServerApp] Kernel started: 2b5f4e5b-4775-4441-aa31-4cc3e3990bac
+[I 2024-07-29 05:23:52.972 ServerApp] Culling kernels with idle durations > 600 seconds at 60 second intervals ...
+[I 2024-07-29 05:23:52.972 ServerApp] Culling kernels even with connected clients
+[I 2024-07-29 05:23:53.895 ServerApp] Connecting to kernel 2b5f4e5b-4775-4441-aa31-4cc3e3990bac.
+[I 2024-07-29 05:25:19.484 ServerApp] Starting buffering for 2b5f4e5b-4775-4441-aa31-4cc3e3990bac:6721719f459e4533836daea3636af151
+[I 2024-07-29 05:25:29.125 ServerApp] Kernel shutdown: 2b5f4e5b-4775-4441-aa31-4cc3e3990bac
+[W 2024-07-29 05:26:48.966 ServerApp] Notebook scripts/tei.ipynb is not trusted
+[I 2024-07-29 05:26:49.605 ServerApp] Kernel started: 2709753f-3e50-4926-bcca-13bd05cb2678
+[I 2024-07-29 05:26:50.567 ServerApp] Connecting to kernel 2709753f-3e50-4926-bcca-13bd05cb2678.
+[I 2024-07-29 05:27:32.719 ServerApp] Starting buffering for 2709753f-3e50-4926-bcca-13bd05cb2678:6791f98428774771afa495a885f4d3ce
+[W 2024-07-29 05:28:20.213 ServerApp] Notebook scripts/regex.ipynb is not trusted
+[I 2024-07-29 05:28:20.790 ServerApp] Kernel started: 049190cd-8997-451c-b124-0fea2c7d9c75
+[I 2024-07-29 05:28:21.700 ServerApp] Connecting to kernel 049190cd-8997-451c-b124-0fea2c7d9c75.
+[I 2024-07-29 05:30:20.911 ServerApp] Saving file at /scripts/regex.ipynb
+[I 2024-07-29 05:30:27.998 ServerApp] Saving file at /scripts/regex.ipynb
+[I 2024-07-29 05:31:44.580 ServerApp] Saving file at /scripts/regex.ipynb
+[I 2024-07-29 05:31:46.901 ServerApp] Starting buffering for 049190cd-8997-451c-b124-0fea2c7d9c75:0ca4cb583f27442fb6e2dc6e6ddeadf3
+[I 2024-07-29 05:31:52.372 ServerApp] New terminal with automatic name: 1

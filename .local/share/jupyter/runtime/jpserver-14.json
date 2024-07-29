@@ -1,0 +1,13 @@
+{
+  "base_url": "/binder/jupyter/user/ccs-zcu-pribehy-dat-da9hmxko/",
+  "hostname": "0.0.0.0",
+  "password": false,
+  "pid": 14,
+  "port": 8888,
+  "root_dir": "/home/jovyan",
+  "secure": false,
+  "sock": "",
+  "token": "776FsE2hTvKajnsSQuXJjQ",
+  "url": "http://jupyter-ccs-2dzcu-2dpribehy-2ddat-2dda9hmxko:8888/binder/jupyter/user/ccs-zcu-pribehy-dat-da9hmxko/",
+  "version": "2.14.1"
+}
