@@ -1,4 +1,6 @@
 /data/large_files/
+/scripts/GIST_v1-1.parquet
+/scripts/LIST_v1-1.parquet
 /data/KDDHB_students.csv
 /data/UDHB_students.csv
 /data/data_df.json
