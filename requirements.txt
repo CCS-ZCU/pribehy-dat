@@ -7,6 +7,10 @@ nltk
 gensim
 networkx
 scikit-learn
+markdown
+
+stanza
+gensim
 
 matplotlib
 seaborn

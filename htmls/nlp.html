@@ -7312,6 +7312,7 @@ a.anchor-link {
                     processEnvironments: true
                 },
                 displayAlign: 'center',
+                messageStyle: 'none',
                 CommonHTML: {
                     linebreaks: {
                     automatic: true
@@ -7531,7 +7532,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Cílem tohoto cvičení je provést základní kvantitativní textovou analýzu některého digitalizovaného dokumentu z <strong>Archivu Jana Patočky</strong> (<a href="https://archiv.janpatocka.cz/items/browse?tags=fulltext">AJP</a>). Omezíme se však pouze na dokumenty, u kterých je dostupný digitální přepis (tzv. fulltext). Tj. URL adresa, kterou hledáme, je adresa jakéhokoliv námi vybraného dokumentu z daného archivu pro který je dostupný přepis.</p>
+<p>Cílem tohoto cvičení je provést základní kvantitativní textovou analýzu některého digitalizovaného dokumentu z <strong>Archivu Jana Patočky</strong> (<a href="https://archiv.janpatocka.cz/items/browse?tags=fulltext">AJP</a>). Omezíme se však pouze na dokumenty, u kterých je dostupný digitální přepis (tzv. fulltext). Tj. URL adresa, kterou hledáme, je adresa jakéhokoliv námi vybraného dokumentu z daného archivu, pro který je dostupný přepis.</p>
 </div>
 </div>
 </div>
@@ -7557,21 +7558,21 @@ a.anchor-link {
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">%%capture</span>
 <span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">stanza</span>
 <span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">gensim</span>
-<span class="kn">import</span> <span class="nn">stanza</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">stanza</span>
 <span class="n">stanza</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
 <span class="n">czech_pipeline</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">urllib.request</span> <span class="kn">import</span> <span class="n">urlopen</span> <span class="c1"># pro práci w webovými adresami</span>
-<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span> <span class="c1"># pro práci s webovými stránkami ve formátu html</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span> <span class="c1"># pro práci s tabulkami ve formátu dataframe</span>
-<span class="kn">import</span> <span class="nn">nltk</span> <span class="c1"># modul pro práci s textovými daty</span>
-<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlopen</span> <span class="c1"># pro práci w webovými adresami</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span> <span class="c1"># pro práci s webovými stránkami ve formátu html</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span> <span class="c1"># pro práci s tabulkami ve formátu dataframe</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">nltk</span> <span class="c1"># modul pro práci s textovými daty</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.feature_extraction.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">CountVectorizer</span>
 <span class="n">nltk</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s1">'punkt'</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span> <span class="c1"># modul pro vytváření grafů</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> <span class="c1"># modul pro pokročilejší matematické operace</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">TruncatedSVD</span>
-<span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">KeyedVectors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span> <span class="c1"># modul pro vytváření grafů</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span> <span class="c1"># modul pro pokročilejší matematické operace</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">TruncatedSVD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gensim.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeyedVectors</span>
 </pre></div>
 </div>
 </div>
@@ -7621,7 +7622,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7629,14 +7630,27 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">text_title</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"div"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"item_title"</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Pokusme se nalézt v html struktuře název příslušného textu.</span>
+<span class="n">text_title</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"div"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"item_title"</span><span class="p">)</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
 <span class="n">text_title</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[4]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>'Pražský filosofický kroužek'</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7644,13 +7658,26 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="p">[</span><span class="n">div</span> <span class="k">for</span> <span class="n">div</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"div"</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="s2">"col span_7_of_9"</span><span class="p">)][</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># A pokusme se nalézt rok vydání.</span>
+<span class="p">[</span><span class="n">div</span> <span class="k">for</span> <span class="n">div</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"div"</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="s2">"col span_7_of_9"</span><span class="p">)][</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">get_text</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[5]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>'1935'</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7666,7 +7693,20 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Pražský filosofický kroužek vznikl s účelem zintesivnění filosofické práce v Československu z některých popudů VIII. mezinárodního filosofického sjezdu v Praze na podnět univ. profesorů Kozáka a Utitze. Na rozdíl od způsobu práce velkých filosofických společností chce filosofický kroužek pěstovat úzkou součinnost co možná odbornou, takřka seminární, a proto neklade důraz na širokou účast veřejnosti. Pražský filosofický kroužek hodlá pořádati přednášky, diskuse, vydávati publikace a založiti filosofický archiv. Jednací řeči může býti kterýkoli jazyk. Společné práce jsou účastni Čechoslováci české i německé národnosti, kromě toho je přihlášena řada zahraničních spolupracovníků národnosti německé, francouzské, španělské, ruské aj. Program kroužku je pěstěni filosofie v duchu domácí tradice, representované jmény Komenský, Bolzano, Masaryk, to jest ve víře v universální teoretické i praktické posláni filosofie, která ovšem zde neni pochopena jako záležitost, interesujíci pouze intelekt, nýbrž která objímá celý život. Filosoficky hledí kroužek přihlížeti především k duchovědným tendencím naši doby a odmítá metodické přehmaty mathematismu, který přírodovědecké metody druhdy neoprávněným způsobem přenáší na vědecká území, jež vyžaduji své specifické pojmotvorby. Pravidelnější debatní schůzky kroužku se konaly od ledna t. r. v intervalech 2-3 neděl. V souhlase s náměty programu byl zvolen za předmět diskusí pojem ducha, stanoveni jeho filosofického místa a příspěvky k jeho definici. Prvním referentem byl prof. Jan B. Kozák, který ve své přednášce „O podstatě ducha” udal řadu témat k diskusi, jež se rozvíjela ve všech ostatních debatních večerech. Za vlastni místo problému pokládá prof. Kozák pojem intencionálniho vztahováni se k předmětu. Hlavni these próf. Kozáka byla: vše duchovni je transcendujici míněni. Jak patrno, nemínil prof. K. přímo určiti povahu ducha v celé jeho šíři, nýbrž prostě ohraničiti terén. „Transcendujici mínění” leží samozřejmě ve sféře intencionality. Ve sféře vědomí leží proti transcendujícimu mínění prožitky jako ryzí dojmy, city a nálady, které již možno označit jako sféru „čisté presence” (das schlichte Haben). Přiklad pro transcendujici mínění je na př. „míti barevný dojem a viděti v něm barvu”. To, co je nám presentní, barevný dojem, slouží za pouhé průchodní stadium mínění, jež jde nikoli na tuto určitou nuanci, nýbrž na pojem barvy, který je danou nuanci representován. Transcendující mínění považuje prof. K. vždy za myšleni, souzeni o něčem, co nemůže nikdy býti našemu vědomi dáno způsobem čisté presence. Proč jest nutno zaváděti tuto novou řeč o „mínění”, proč se nespokojit slovem „soud”? Poněvadž v řadách soudů je vystižen týž předmět, intence všech soudů stejného pólu konvergují k němu jako k identickému čili. V transcendentním mínění je spoluobsaženo úsilí, vytěžiti předmět všestranně v soudových řadách. Kozákova terminologie zde do jisté míry navazuje na Husserlovo „iMeinen”, které má právě tento dynamický charakter. Zároveň tím poukázáno na dlouhou řadu deskriptivních problémů, kterou klade transcendujici míněni v různých oborech předmětnosti. Zejména důležitý je vztah transcendujiciho míněni k „ideálním předmětům”, které bývají nazývány též „duchovními”; transcendující míněni, týkající se ideálního, zdá se prof. K. nejspíše tvořiti definici ducha. Přednáška dra L. Landgrebe navázala na výklad prof. Kozáka tím, že charakterisovala Kozákovo pojetí ducha jako postupnou objektivisaci. Co však znamená tento proces po subjektivní stránce? Děti a „primitivové”, jak známo, jsou schopni jen zlomkovité objektivisace. Proces objektivisace má tedy své subjektivní předpoklady; takovým jest podle dra L. j á jakožto autor, vykonavatel aktů, jim teprve dostává akt svůj charakter spontaneity na rozdíl od pouhé presence, dané v pasivitě. Popis se musí tedy od výlučného zřetele k objektivnímu pólu obrátit k čistě vnitřnímu ustrojení aktu. Já však není v tomto subjektivním zaměření omezeno na pouhý bodový pól, nýbrž tkví v nositeli aktivit, který je každému jednotlivému aktu nadřazen, v konkrétní osobě (ne však ve smyslu obvyklého psychofysického pojetí!). Pojem duchovního aktu vyžaduje tedy vypracování pojmu duchovního projevu, duchovního stanoviska osoby. Pojmem osoby však do deskriptivních analys zavedena nová dimense, která již nemůže býti vyčerpána analysou jednotlivých aktů; jím je překročen stupeň elementárních analys. Landgrebe upozorňuje dále na důležitý pojem habitu a na jeho souvislost s interesy, pokouší se tudíž o nalezení vodítka této komplexní analysy. Pojem ducha nebude se nyní krýti s pojmem duchovního aktu, nýbrž bude pojmem určitého osobního habitu a v něm založených osobních interesů. Ke konci vyzvedl dr. L. metodické obtíže zkoumání takového pojmu, jako „duch”, který je zatížen tisíciletou tradici a při tom zapojen do dějinné relativity; zde je nutno postupovat jinak a daleko ostražitěji, než při elementárních analysách aktů, které nejsou historickým postupem tangovány. Pojem ducha nemůže krátce býti studován nehistoricky, nýbrž naopak ve své staleté tradici. – Tento návrh se setkal se všeobecným souhlasem a v kroužku bude v tomto smyslu dále pracováno; některá historická témata jsou ohlášena. J. Patočka pokusil se ve svém referátě jednak precisovat leccos z dotud uvedeného, jednak radikalisovat otázku zavedením dalšího hlediska. Navazuje na Landgrebeho překročení elementárních analys, upozorňuje na pojem horizontu, zavedený fenomenology, jako na předpoklad elementární aktivity a pokouší se stanovit pojem světa jakožto universálního horizontu, který umožňuje veškeru jednotlivou objektivaci. Bráně se intelektualismu dosavadních pokusů o určení ducha hledí nasaditi tento pojem jako aktivitu, která se výslovně vztahuje k universálnímu fenoménu světa v různých modalitách – filosofii, umění, životní moudrosti, náboženství. Této přednášce, zejména pojmu světa a horizontu, bylo pak věnováno několik diskusních večerů, v nichž zejména přetřásány otázky idealismu – realismu a jiné principiální obtíže, jež vyplynuly z nově zavedených pojmů. Profesor Utitz předložil k diskusi – na rozdíl od předchozích hmatajících pokusů – hotovou thesi, že duch znamená spravedlivost. Pojem spravedlnosti – Gerechtigkeit – nechce míti pojat ve smyslu ryze ethickém, nýbrž rozšiřuje jej na každé duševní chování, jež jest právo určité situaci (gerecht werden). Existuje rozdíl mezi pouhým únikem ze situace a mezi jejím řešením, jež předpokládá, že jsme jí praví, že ji pochopujeme; býti práv věci či situaci neznamená pak nutně jen intelektuální pochopení, nýbrž může býti též emocionálním aktem, jako na př. uvědomělá správná láska. Třebaže prof. Utitz pojímá pojem spravedlnosti bez vedlejšího přízvuku ethického, existuje určitý svazek mezi pojmem takto široce pojatým a mezi ethickou spravedlností, která je takřka ctností duchovního člověka, jeho kritériem. To se osvědčuje též dějinně: duchovní období v dějinách jsou zároveň období, kdy idea spravedlnosti se povznáší, případně i vládne. Je vůbec myšlenkou profesora Utitze, že dějiny filosofie jsou pro ni takřka náhradou experimentu, počítáme-li k dějinám jejím i osudy filosofů, jejich filosofie a poměr filosofův k jeho filosofii. Tato přednáška vzbudila nejsilnější debatu. Zejména prof. Eng-länder polemisoval obšírně s rozšířením pojmu spravedlnosti, jak se oň pokusil profesor Utitz, a upozorňoval, není-li jím pojem spravedlnosti přeceněn; dokonce v sociálním pořádku, v normách, jež dirigují na př. národní hospodářství, hraje princip spravedlnosti rolí sekundární, regulativní, nemůže býti základní normou, kterou je maximum společenského blaha. Dr. Grube snažil se ve svém závěrečném výkladu, aby ukázal, že výklad prof. Utitze je v podstatě konkretisací myšlenek, jež byly v předchozích referátech podány. Grube vycházel zvláště z celkovosti duchovni aktivity, jak ji zdůraznil třetí referent, a ukazoval, jak v jeho vývodech ponechán pojem výslovného vztahování k universálnímu fenoménu světa v neurčitosti, schopné bližší konkretisace. Naopak znamenalo by neporozumění vývodům prof. Utitze, kdyby „spravedlnost” jako charakter ducha byla zbavena vztahu k celku, k universu, poněvadž by pak „spravedlnost k věcem” byla implikována i v aktech, obvykle nepokládaných za duchovní. Také ostatní účastníci schůzek přispěli k oživení debat pestrými, druhdy hlubokými sugescemi; v debatách mínění na sebe někdy ostře narážela, aby posléze došlo přece ke krystalisací aspoň prvních rysů jednotného přesvědčeni.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7684,7 +7724,38 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>['Pražský',
+ 'filosofický',
+ 'kroužek',
+ 'vznikl',
+ 's',
+ 'účelem',
+ 'zintesivnění',
+ 'filosofické',
+ 'práce',
+ 'v',
+ 'Československu',
+ 'z',
+ 'některých',
+ 'popudů',
+ 'VIII.',
+ 'mezinárodního',
+ 'filosofického',
+ 'sjezdu',
+ 'v',
+ 'Praze']</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7695,6 +7766,18 @@ a.anchor-link {
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1">### pomocí funkce "len()" spočítáme délku tohoto listu slov:</span>
 <span class="nb">len</span><span class="p">(</span><span class="n">string_list</span><span class="p">)</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>1197</pre>
 </div>
 </div>
 </div>
@@ -7716,7 +7799,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7728,6 +7811,189 @@ a.anchor-link {
 <span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
 <span class="n">doc</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[
+  [
+    {
+      "id": 1,
+      "text": "Česká",
+      "lemma": "český",
+      "upos": "ADJ",
+      "xpos": "AAFS1----1A----",
+      "feats": "Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos",
+      "head": 2,
+      "deprel": "amod",
+      "start_char": 0,
+      "end_char": 5
+    },
+    {
+      "id": 2,
+      "text": "republika",
+      "lemma": "republika",
+      "upos": "NOUN",
+      "xpos": "NNFS1-----A----",
+      "feats": "Case=Nom|Gender=Fem|Number=Sing",
+      "head": 6,
+      "deprel": "nsubj",
+      "start_char": 6,
+      "end_char": 15
+    },
+    {
+      "id": 3,
+      "text": "je",
+      "lemma": "být",
+      "upos": "AUX",
+      "xpos": "VB-S---3P-AAI--",
+      "feats": "Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
+      "head": 6,
+      "deprel": "cop",
+      "start_char": 16,
+      "end_char": 18
+    },
+    {
+      "id": 4,
+      "text": "velmi",
+      "lemma": "velmi",
+      "upos": "ADV",
+      "xpos": "Db-------------",
+      "head": 5,
+      "deprel": "advmod",
+      "start_char": 19,
+      "end_char": 24
+    },
+    {
+      "id": 5,
+      "text": "sebevědomý",
+      "lemma": "sebevědomý",
+      "upos": "ADJ",
+      "xpos": "AAIS1----1A----",
+      "feats": "Animacy=Inan|Case=Nom|Degree=Pos|Gender=Masc|Number=Sing|Polarity=Pos",
+      "head": 6,
+      "deprel": "amod",
+      "start_char": 25,
+      "end_char": 35
+    },
+    {
+      "id": 6,
+      "text": "stát",
+      "lemma": "stát",
+      "upos": "NOUN",
+      "xpos": "NNIS1-----A----",
+      "feats": "Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing",
+      "head": 0,
+      "deprel": "root",
+      "start_char": 36,
+      "end_char": 40,
+      "misc": "SpaceAfter=No"
+    },
+    {
+      "id": 7,
+      "text": ",",
+      "lemma": ",",
+      "upos": "PUNCT",
+      "xpos": "Z:-------------",
+      "head": 9,
+      "deprel": "punct",
+      "start_char": 40,
+      "end_char": 41
+    },
+    {
+      "id": 8,
+      "text": "který",
+      "lemma": "který",
+      "upos": "DET",
+      "xpos": "P4YS1----------",
+      "feats": "Case=Nom|Gender=Masc|Number=Sing|PronType=Int,Rel",
+      "head": 9,
+      "deprel": "nsubj",
+      "start_char": 42,
+      "end_char": 47
+    },
+    {
+      "id": 9,
+      "text": "dokáže",
+      "lemma": "dokázat",
+      "upos": "VERB",
+      "xpos": "VB-S---3P-AAP--",
+      "feats": "Aspect=Perf|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act",
+      "head": 6,
+      "deprel": "acl:relcl",
+      "start_char": 48,
+      "end_char": 54
+    },
+    {
+      "id": 10,
+      "text": "stát",
+      "lemma": "stát",
+      "upos": "VERB",
+      "xpos": "Vf--------A-P--",
+      "feats": "Aspect=Perf|Polarity=Pos|VerbForm=Inf",
+      "head": 9,
+      "deprel": "xcomp",
+      "start_char": 55,
+      "end_char": 59
+    },
+    {
+      "id": 11,
+      "text": "na",
+      "lemma": "na",
+      "upos": "ADP",
+      "xpos": "RR--6----------",
+      "feats": "AdpType=Prep|Case=Loc",
+      "head": 13,
+      "deprel": "case",
+      "start_char": 60,
+      "end_char": 62
+    },
+    {
+      "id": 12,
+      "text": "vlastních",
+      "lemma": "vlastní",
+      "upos": "ADJ",
+      "xpos": "AAFP6----1A----",
+      "feats": "Case=Loc|Degree=Pos|Gender=Fem|Number=Plur|Polarity=Pos",
+      "head": 13,
+      "deprel": "amod",
+      "start_char": 63,
+      "end_char": 72
+    },
+    {
+      "id": 13,
+      "text": "nohách",
+      "lemma": "noha",
+      "upos": "NOUN",
+      "xpos": "NNFP6-----A----",
+      "feats": "Case=Loc|Gender=Fem|Number=Plur",
+      "head": 10,
+      "deprel": "obl",
+      "start_char": 73,
+      "end_char": 79,
+      "misc": "SpaceAfter=No"
+    },
+    {
+      "id": 14,
+      "text": ".",
+      "lemma": ".",
+      "upos": "PUNCT",
+      "xpos": "Z:-------------",
+      "head": 6,
+      "deprel": "punct",
+      "start_char": 79,
+      "end_char": 80,
+      "misc": "SpaceAfter=No"
+    }
+  ]
+]</pre>
 </div>
 </div>
 </div>
@@ -7758,7 +8024,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7779,6 +8045,126 @@ a.anchor-link {
 <span class="n">data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">data_df</span><span class="p">[</span><span class="mi">30</span><span class="p">:</span><span class="mi">40</span><span class="p">]</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>sent_n</th>
+<th>text</th>
+<th>lemma</th>
+<th>upos</th>
+<th>xpos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>30</th>
+<td>1</td>
+<td>Na</td>
+<td>na</td>
+<td>ADP</td>
+<td>RR--4----------</td>
+</tr>
+<tr>
+<th>31</th>
+<td>1</td>
+<td>rozdíl</td>
+<td>rozdíl</td>
+<td>NOUN</td>
+<td>NNIS4-----A----</td>
+</tr>
+<tr>
+<th>32</th>
+<td>1</td>
+<td>od</td>
+<td>od</td>
+<td>ADP</td>
+<td>RR--2----------</td>
+</tr>
+<tr>
+<th>33</th>
+<td>1</td>
+<td>způsobu</td>
+<td>způsob</td>
+<td>NOUN</td>
+<td>NNIS2-----A----</td>
+</tr>
+<tr>
+<th>34</th>
+<td>1</td>
+<td>práce</td>
+<td>práce</td>
+<td>NOUN</td>
+<td>NNFS2-----A----</td>
+</tr>
+<tr>
+<th>35</th>
+<td>1</td>
+<td>velkých</td>
+<td>velký</td>
+<td>ADJ</td>
+<td>AAFP2----1A----</td>
+</tr>
+<tr>
+<th>36</th>
+<td>1</td>
+<td>filosofických</td>
+<td>filosofický</td>
+<td>ADJ</td>
+<td>AAFP2----1A----</td>
+</tr>
+<tr>
+<th>37</th>
+<td>1</td>
+<td>společností</td>
+<td>společnost</td>
+<td>NOUN</td>
+<td>NNFP2-----A----</td>
+</tr>
+<tr>
+<th>38</th>
+<td>1</td>
+<td>chce</td>
+<td>chtít</td>
+<td>VERB</td>
+<td>VB-S---3P-AAI--</td>
+</tr>
+<tr>
+<th>39</th>
+<td>1</td>
+<td>filosofický</td>
+<td>filosofický</td>
+<td>ADJ</td>
+<td>AAIS1----1A----</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -7814,7 +8200,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7824,6 +8210,67 @@ a.anchor-link {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">lemmatized_sentences</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[13]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[['pražský',
+  'filosofický',
+  'kroužek',
+  'vzniknout',
+  'účel',
+  'zintesivnění',
+  'filosofický',
+  'práce',
+  'Československo',
+  'popud',
+  'mezinárodní',
+  'filosofický',
+  'sjezd',
+  'Praha',
+  'podnět',
+  'univ',
+  'profesor',
+  'Kozák',
+  'Utitz'],
+ ['rozdíl',
+  'způsob',
+  'práce',
+  'velký',
+  'filosofický',
+  'společnost',
+  'chtít',
+  'filosofický',
+  'kroužek',
+  'pěstovat',
+  'úzký',
+  'součinnost',
+  'odborný',
+  'seminární',
+  'klást',
+  'důraz',
+  'široký',
+  'účast',
+  'veřejnost'],
+ ['pražský',
+  'filosofický',
+  'kroužek',
+  'hodlat',
+  'pořádat',
+  'přednáška',
+  'diskuse',
+  'vydávat',
+  'publikace',
+  'založit',
+  'filosofický',
+  'archiv']]</pre>
 </div>
 </div>
 </div>
@@ -7839,7 +8286,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7859,6 +8306,19 @@ a.anchor-link {
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>[('pojem', 23), ('duch', 12), ('prof', 10), ('akt', 10), ('spravedlnost', 9), ('filosofický', 8), ('mínění', 8), ('duchovní', 8), ('kroužek', 7), ('Utitz', 7)]
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -7870,7 +8330,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7899,6 +8359,18 @@ a.anchor-link {
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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fURHR2PkyJFo2rQp9PX14eXlhXnz5olt+vXrh4SEBAQEBEBLSwujRo1SGjU7evQo8vLyMHjwYAwePFicHxgYiIiICLi7u2PHjh2YNm0a5syZA21tbdSuXRsDBgwosqaePXsiPz8f/v7+0NDQQI8ePT7SM0JERETqSia8eZIVSVpmZuarqzZDNkBDrq/qckgNpc72UHUJRERlTsH3d0ZGxjvPH1f7w5pEREREpQnDGREREZGEMJwRERERSQjDGREREZGEMJwRERERSQjDGREREZGEMJwRERERSUipuAltWXQx1J2/s0lERFQKceSMiIiISEIYzoiIiIgkhOGMiIiISEIYzoiIiIgkhOGMiIiISEIYzoiIiIgkhLfSUFP2U6KhIddXdRmkhlJne6i6BCIieguOnBERERFJCMMZERERkYQwnBERERFJCMMZERERkYQwnBERERFJCMMZERERkYQwnBERERFJCMPZR5SamgqZTIb4+HhVl0JERERqiuGsCC4uLggJCSk0PyIiAiYmJgCAoKAgeHp6Ki23tLREWloa7O3tAQCxsbGQyWRIT0//tAUTERFRqcFfCPiINDU1YW5uruoyiIiISI1x5OwDTJ06FZGRkdi2bRtkMhlkMhliY2OVDmumpqaiXbt2AIBy5cpBJpMhKChIbPPm5OLiotqdIiIiIkngyNkHGDNmDBITE5GZmYnly5cDAExNTXHnzh2xjaWlJaKiouDl5YWkpCQYGxtDT08PhoaGSEtLE9vdvXsX7du3R5s2bYrcVm5uLnJzc8XHmZmZn2iviIiISAoYzj6AoaEh9PT0kJubW+xhTE1NTZiamgIAKlasKJ6rBkBc59mzZ/D09ETLli0xderUIvsJCwtDaGjoR62fiIiIpIuHNVWoX79+ePLkCdasWQMNjaJfigkTJiAjI0Ocbt269ZmrJCIios+JI2dFMDY2RkZGRqH56enpUCgUH2UbM2bMQHR0NE6ePAkjI6Ni28nlcsjl8o+yTSIiIpI+jpwVwc7ODmfPni00/+zZs7C1tQUA6OjoIC8v76396OjoAEChdlFRUZg2bRo2bNgAa2vrj1Q1ERERlQYMZ0UYMmQIrl69ihEjRuD8+fNISkrCvHnzsHbtWnzzzTcAACsrK3HZv//+ixcvXhTqp3r16pDJZNixYwcePHiArKwsXLx4EQEBAfj2229R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"/>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -7910,7 +8382,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7925,6 +8397,183 @@ a.anchor-link {
 <span class="n">cooccurrence_matrix_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Xc</span><span class="o">.</span><span class="n">todense</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">)</span>
 <span class="n">cooccurrence_matrix_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[16]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>pojem</th>
+<th>duch</th>
+<th>prof</th>
+<th>akt</th>
+<th>spravedlnost</th>
+<th>filosofický</th>
+<th>mínění</th>
+<th>duchovní</th>
+<th>kroužek</th>
+<th>Utitz</th>
+<th>...</th>
+<th>Kozákův</th>
+<th>navazovat</th>
+<th>deskriptivní</th>
+<th>různý</th>
+<th>důležitý</th>
+<th>vztah</th>
+<th>ideální</th>
+<th>dra</th>
+<th>pojetí</th>
+<th>proces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>pojem</th>
+<td>39</td>
+<td>7</td>
+<td>5</td>
+<td>6</td>
+<td>9</td>
+<td>1</td>
+<td>1</td>
+<td>11</td>
+<td>0</td>
+<td>4</td>
+<td>...</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<th>duch</th>
+<td>7</td>
+<td>12</td>
+<td>5</td>
+<td>2</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+<td>...</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<th>prof</th>
+<td>5</td>
+<td>5</td>
+<td>10</td>
+<td>1</td>
+<td>6</td>
+<td>0</td>
+<td>1</td>
+<td>2</td>
+<td>0</td>
+<td>4</td>
+<td>...</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<th>akt</th>
+<td>6</td>
+<td>2</td>
+<td>1</td>
+<td>12</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>0</td>
+<td>1</td>
+<td>...</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<th>spravedlnost</th>
+<td>9</td>
+<td>2</td>
+<td>6</td>
+<td>2</td>
+<td>15</td>
+<td>0</td>
+<td>0</td>
+<td>5</td>
+<td>0</td>
+<td>6</td>
+<td>...</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>5 rows × 100 columns</p>
+</div>
 </div>
 </div>
 </div>
@@ -7986,7 +8635,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_patocka</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_patocka</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
   <span class="n">textdata</span> <span class="o">=</span> <span class="p">{}</span>
   <span class="k">try</span><span class="p">:</span>
     <span class="n">web_text</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
@@ -8019,7 +8668,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8030,8 +8679,55 @@ a.anchor-link {
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">base_url</span> <span class="o">=</span> <span class="s2">"https://archiv.janpatocka.cz/items/browse?tags=fulltext&amp;page="</span>
 <span class="n">page_url</span> <span class="o">=</span> <span class="n">base_url</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">resp_text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">page_url</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
-<span class="p">[</span><span class="s2">"https://archiv.janpatocka.cz"</span> <span class="o">+</span> <span class="n">href</span> <span class="k">for</span> <span class="n">href</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">"/items/show/\d+"</span><span class="p">,</span> <span class="n">resp_text</span><span class="p">)]</span>
+<span class="p">[</span><span class="s2">"https://archiv.janpatocka.cz"</span> <span class="o">+</span> <span class="n">href</span> <span class="k">for</span> <span class="n">href</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"/items/show/\d+"</span><span class="p">,</span> <span class="n">resp_text</span><span class="p">)]</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[19]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>['https://archiv.janpatocka.cz/items/show/2657',
+ 'https://archiv.janpatocka.cz/items/show/2657',
+ 'https://archiv.janpatocka.cz/items/show/2656',
+ 'https://archiv.janpatocka.cz/items/show/2656',
+ 'https://archiv.janpatocka.cz/items/show/2655',
+ 'https://archiv.janpatocka.cz/items/show/2655',
+ 'https://archiv.janpatocka.cz/items/show/2654',
+ 'https://archiv.janpatocka.cz/items/show/2654',
+ 'https://archiv.janpatocka.cz/items/show/2653',
+ 'https://archiv.janpatocka.cz/items/show/2653',
+ 'https://archiv.janpatocka.cz/items/show/2652',
+ 'https://archiv.janpatocka.cz/items/show/2652',
+ 'https://archiv.janpatocka.cz/items/show/2651',
+ 'https://archiv.janpatocka.cz/items/show/2651',
+ 'https://archiv.janpatocka.cz/items/show/2650',
+ 'https://archiv.janpatocka.cz/items/show/2650',
+ 'https://archiv.janpatocka.cz/items/show/2649',
+ 'https://archiv.janpatocka.cz/items/show/2649',
+ 'https://archiv.janpatocka.cz/items/show/2648',
+ 'https://archiv.janpatocka.cz/items/show/2648',
+ 'https://archiv.janpatocka.cz/items/show/2647',
+ 'https://archiv.janpatocka.cz/items/show/2647',
+ 'https://archiv.janpatocka.cz/items/show/2646',
+ 'https://archiv.janpatocka.cz/items/show/2646',
+ 'https://archiv.janpatocka.cz/items/show/2645',
+ 'https://archiv.janpatocka.cz/items/show/2645',
+ 'https://archiv.janpatocka.cz/items/show/2644',
+ 'https://archiv.janpatocka.cz/items/show/2644',
+ 'https://archiv.janpatocka.cz/items/show/2643',
+ 'https://archiv.janpatocka.cz/items/show/2643',
+ 'https://archiv.janpatocka.cz/items/show/2642',
+ 'https://archiv.janpatocka.cz/items/show/2642',
+ 'https://archiv.janpatocka.cz/items/show/2641',
+ 'https://archiv.janpatocka.cz/items/show/2641',
+ 'https://archiv.janpatocka.cz/items/show/2640',
+ 'https://archiv.janpatocka.cz/items/show/2640']</pre>
 </div>
 </div>
 </div>
@@ -8170,7 +8866,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_lemmatized_sents</span><span class="p">(</span><span class="n">rawtext</span><span class="p">):</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_lemmatized_sents</span><span class="p">(</span><span class="n">rawtext</span><span class="p">):</span>
   <span class="k">try</span><span class="p">:</span>
     <span class="n">doc</span> <span class="o">=</span> <span class="n">czech_pipeline</span><span class="p">(</span><span class="n">rawtext</span><span class="p">)</span>
     <span class="n">lemmatized_sentences</span> <span class="o">=</span> <span class="p">[]</span>
@@ -8203,7 +8899,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8218,7 +8914,99 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/tmp/ipykernel_4020864/2548441132.py:1: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+/tmp/ipykernel_4020864/2548441132.py:1: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+/tmp/ipykernel_4020864/2548441132.py:1: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[27]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>url</th>
+<th>title</th>
+<th>date</th>
+<th>rawtext</th>
+<th>lemmatized_sents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>https://archiv.janpatocka.cz/items/show/98</td>
+<td>Recenze na: J. Kratochvil, Meditace věků. Ději...</td>
+<td>1932</td>
+<td>Josef Kratochvil: Meditace věků. Dějinný vývoj...</td>
+<td>[[Josef, Kratochvil, meditace, věk], [dějinný,...</td>
+</tr>
+<tr>
+<th>1</th>
+<td>https://archiv.janpatocka.cz/items/show/335</td>
+<td>Recenze na: H. Gouhier, La jeunesse d’Auguste ...</td>
+<td>1936</td>
+<td>None</td>
+<td>[]</td>
+</tr>
+<tr>
+<th>2</th>
+<td>https://archiv.janpatocka.cz/items/show/66</td>
+<td>Recenze na: J. Benda, La fin de l’éternel</td>
+<td>1929</td>
+<td>Julien Benda, La fin de 1’eternel, Paris, Gall...</td>
+<td>[[Julien, Benda], [strana, cena, frs], [nový, ...</td>
+</tr>
+<tr>
+<th>3</th>
+<td>https://archiv.janpatocka.cz/items/show/30</td>
+<td>Gorgias\n</td>
+<td>None</td>
+<td>﻿Ještě ve stručnosti zopakuji hlavní body té K...</td>
+<td>[[stručnost, zopakovat, hlavní, bod, Kallikleů...</td>
+</tr>
+<tr>
+<th>4</th>
+<td>https://archiv.janpatocka.cz/items/show/95</td>
+<td>Recenze na: G. Ipsen, Sprachphilosophie der Ge...</td>
+<td>1932</td>
+<td>Philosophische Forschungsberichte, Junker und ...</td>
+<td>[[Berlin], [Heft, Gunther, Ipsen, 8°, strana, ...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8232,7 +9020,19 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[28]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>(363, 5)</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8251,7 +9051,28 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[29]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[('mít', 3801),
+ ('život', 2831),
+ ('svět', 2785),
+ ('moci', 2634),
+ ('smysl', 2580),
+ ('věc', 2569),
+ ('člověk', 2182),
+ ('způsob', 1713),
+ ('bytí', 1614),
+ ('muset', 1502)]</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8265,6 +9086,183 @@ a.anchor-link {
 <span class="n">cooccurrence_matrix_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Xc</span><span class="o">.</span><span class="n">todense</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">)</span>
 <span class="n">cooccurrence_matrix_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[30]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>mít</th>
+<th>život</th>
+<th>svět</th>
+<th>moci</th>
+<th>smysl</th>
+<th>věc</th>
+<th>člověk</th>
+<th>způsob</th>
+<th>bytí</th>
+<th>muset</th>
+<th>...</th>
+<th>ideál</th>
+<th>začínat</th>
+<th>rok</th>
+<th>vnímání</th>
+<th>jednoduchý</th>
+<th>centrum</th>
+<th>učinit</th>
+<th>zjevovat</th>
+<th>dojem</th>
+<th>přel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>mít</th>
+<td>5015</td>
+<td>424</td>
+<td>422</td>
+<td>539</td>
+<td>762</td>
+<td>512</td>
+<td>444</td>
+<td>240</td>
+<td>272</td>
+<td>439</td>
+<td>...</td>
+<td>19</td>
+<td>22</td>
+<td>5</td>
+<td>15</td>
+<td>17</td>
+<td>15</td>
+<td>16</td>
+<td>26</td>
+<td>43</td>
+<td>4</td>
+</tr>
+<tr>
+<th>život</th>
+<td>424</td>
+<td>4589</td>
+<td>413</td>
+<td>298</td>
+<td>425</td>
+<td>233</td>
+<td>551</td>
+<td>333</td>
+<td>169</td>
+<td>174</td>
+<td>...</td>
+<td>21</td>
+<td>12</td>
+<td>1</td>
+<td>9</td>
+<td>18</td>
+<td>20</td>
+<td>9</td>
+<td>5</td>
+<td>12</td>
+<td>8</td>
+</tr>
+<tr>
+<th>svět</th>
+<td>422</td>
+<td>413</td>
+<td>4361</td>
+<td>316</td>
+<td>366</td>
+<td>335</td>
+<td>410</td>
+<td>211</td>
+<td>284</td>
+<td>160</td>
+<td>...</td>
+<td>5</td>
+<td>10</td>
+<td>7</td>
+<td>9</td>
+<td>10</td>
+<td>12</td>
+<td>15</td>
+<td>40</td>
+<td>12</td>
+<td>6</td>
+</tr>
+<tr>
+<th>moci</th>
+<td>539</td>
+<td>298</td>
+<td>316</td>
+<td>3392</td>
+<td>480</td>
+<td>348</td>
+<td>314</td>
+<td>251</td>
+<td>254</td>
+<td>287</td>
+<td>...</td>
+<td>14</td>
+<td>7</td>
+<td>7</td>
+<td>8</td>
+<td>17</td>
+<td>6</td>
+<td>10</td>
+<td>21</td>
+<td>21</td>
+<td>5</td>
+</tr>
+<tr>
+<th>smysl</th>
+<td>762</td>
+<td>425</td>
+<td>366</td>
+<td>480</td>
+<td>3614</td>
+<td>294</td>
+<td>293</td>
+<td>190</td>
+<td>294</td>
+<td>196</td>
+<td>...</td>
+<td>13</td>
+<td>9</td>
+<td>5</td>
+<td>6</td>
+<td>15</td>
+<td>12</td>
+<td>14</td>
+<td>35</td>
+<td>8</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>5 rows × 500 columns</p>
+</div>
 </div>
 </div>
 </div>
@@ -8284,7 +9282,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8300,7 +9298,21 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/home/jupyter-vojta/notebooks/pribehy-dat/pribehy_venv/lib/python3.12/site-packages/gensim/models/keyedvectors.py:551: UserWarning: Adding single vectors to a KeyedVectors which grows by one each time can be costly. Consider adding in batches or preallocating to the required size.
+  warnings.warn(
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8310,6 +9322,35 @@ a.anchor-link {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">kv</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">"svět"</span><span class="p">)</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/home/jupyter-vojta/notebooks/pribehy-dat/pribehy_venv/lib/python3.12/site-packages/gensim/models/keyedvectors.py:849: RuntimeWarning: invalid value encountered in divide
+  dists = dot(self.vectors[clip_start:clip_end], mean) / self.norms[clip_start:clip_end]
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[33]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[('přirozený', 0.9011738300323486),
+ ('naivní', 0.7742812037467957),
+ ('technický', 0.7443950176239014),
+ ('božský', 0.7082546353340149),
+ ('horizont', 0.6666637659072876),
+ ('okolí', 0.6664578318595886),
+ ('křesťanství', 0.6582508683204651),
+ ('radikální', 0.6343516707420349),
+ ('pochopitelný', 0.6330372095108032),
+ ('víra', 0.6326401829719543)]</pre>
 </div>
 </div>
 </div>
