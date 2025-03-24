@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="232e55fb-d75b-46b1-86df-9c9252df975c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/pribehy-dat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/pribehy-dat.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/management/get-htmls.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/management/get-htmls.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/nlp.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/nlp.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -110,7 +107,7 @@
       <option name="presentableId" value="Default" />
       <updated>1742719871590</updated>
       <workItem from="1742719872648" duration="5000" />
-      <workItem from="1742719887635" duration="2042000" />
+      <workItem from="1742719887635" duration="3889000" />
     </task>
     <servers />
   </component>
