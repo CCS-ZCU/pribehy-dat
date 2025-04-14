@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="232e55fb-d75b-46b1-86df-9c9252df975c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/management/kontrola.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/management/kontrola.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/nlp.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/nlp.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/regex.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/regex.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +83,7 @@
       <window_info anchor="right" id="Coverage" side_tool="true" />
       <window_info anchor="right" id="SciView" />
       <window_info anchor="right" id="Notifications" order="0" weight="0.33020833" />
-      <window_info active="true" anchor="right" id="AIAssistant" order="1" visible="true" weight="0.33020833" />
+      <window_info anchor="right" id="AIAssistant" order="1" weight="0.33020833" />
       <window_info anchor="right" id="Database" order="2" weight="0.25" />
       <window_info anchor="right" id="Gradle" order="3" weight="0.25" />
       <window_info anchor="right" id="Maven" order="4" weight="0.25" />
@@ -109,7 +108,7 @@
       <updated>1742719871590</updated>
       <workItem from="1742719872648" duration="5000" />
       <workItem from="1742719887635" duration="5254000" />
-      <workItem from="1744613720674" duration="1600000" />
+      <workItem from="1744613720674" duration="3434000" />
     </task>
     <servers />
   </component>
