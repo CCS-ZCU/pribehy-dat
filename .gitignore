@@ -8,4 +8,9 @@
 /pribehy_venv/
 /management/kontrola.ipynb
 .env
+.cache
+.ipython
+.local
+.npm
+.idea
 .DS_Store
