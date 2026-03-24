@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import google_conf
 
 # get addresses of individual checkpoints
-resp = requests.get("https://sciencedata.dk/public/082a018b1f2fd125ef4907f01ab2e2cf/") # 2025
+resp = requests.get("https://sciencedata.dk/public/082a018b1f2fd125ef4907f01ab2e2cf/") # latest data
 #resp = requests.get("https://sciencedata.dk/public/ede416946cfd3b35dcf1e61ac68da5de") # 2024
 soup = BeautifulSoup(resp.content, "html.parser")
 address = []
