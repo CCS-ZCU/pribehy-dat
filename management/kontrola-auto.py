@@ -4,8 +4,10 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 import google_conf
+import os  # Import the os module
+import datetime # Import datetime for date range check
 
-# Define configurations for each class
+# Define configurations for each
 class_configurations = [
     {
         "class_name": "UDHB",
@@ -21,12 +23,14 @@ class_configurations = [
     }
 ]
 
+
 def clean_user(user):
     try:
         return re.search(r"F\d+\w\d+[PK]?", user.replace("O", "0"), re.IGNORECASE).group()
     except:
         print(user)
-        return None # Return None for users that don't match the pattern
+        return None  # Return None for users that don't match the pattern
+
 
 def process_class_data(config):
     class_name = config["class_name"]
@@ -36,8 +40,14 @@ def process_class_data(config):
 
     print(f"Processing data for class: {class_name}")
 
+    # Get the absolute path to the directory where the script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path to the students data file
+    students_file_path = os.path.join(script_dir, "..", "data", "students_data", students_file)
+
     # get addresses of individual checkpoints
-    resp = requests.get("https://sciencedata.dk/public/082a018b1f2fd125ef4907f01ab2e2cf/") # latest data
+    resp = requests.get("https://sciencedata.dk/public/082a018b1f2fd125ef4907f01ab2e2cf/")  # latest data
     soup = BeautifulSoup(resp.content, "html.parser")
     address = []
     for item in soup.find_all("a"):
@@ -52,17 +62,17 @@ def process_class_data(config):
 
     data_df = pd.DataFrame(data)
     data_df["osCislo"] = data_df["user"].apply(clean_user)
-    data_df.dropna(subset=["osCislo"], inplace=True) # Remove rows where osCislo couldn't be extracted
+    data_df.dropna(subset=["osCislo"], inplace=True)  # Remove rows where osCislo couldn't be extracted
 
     # groupby the data by notebook names
     table = data_df.groupby(["osCislo", "ntb"]).size().unstack(fill_value=0)
-    table = table.clip(upper=2) # maximal value for notebook is 2
+    table = table.clip(upper=2)  # maximal value for notebook is 2
     table.reset_index(inplace=True)
 
     # load students data exported from portal
-    students_df = pd.read_csv(f"../data/students_data/{students_file}", sep=";", encoding='cp1250')
-    students_df = students_df[students_df["stav"]=="S"]
-    students_df = students_df[["osCislo", "prijmeni","jmeno", "userName"]]
+    students_df = pd.read_csv(students_file_path, sep=";", encoding='cp1250')  # Use the absolute path here
+    students_df = students_df[students_df["stav"] == "S"]
+    students_df = students_df[["osCislo", "prijmeni", "jmeno", "userName"]]
 
     merged_df = pd.merge(students_df, table, on="osCislo", how="left")
     merged_df.fillna(0, inplace=True)
@@ -72,8 +82,13 @@ def process_class_data(config):
         if notebook not in merged_df.columns:
             merged_df[notebook] = 0
 
-    # keep only the specified notebooks and personal number...
-    merged_df = merged_df[["osCislo"] + notebooks_to_keep]
+    # --- START OF MODIFICATION ---
+    # Explicitly define the columns to keep for the final output
+    # This will ensure only 'osCislo' and the specified notebooks are included,
+    # removing 'prijmeni', 'jmeno', and 'userName'.
+    columns_for_upload = ["osCislo"] + notebooks_to_keep
+    merged_df = merged_df[columns_for_upload].copy() # Use .copy() to ensure a new DataFrame
+    # --- END OF MODIFICATION ---
 
     # sum up the values
     merged_df["sum"] = merged_df[notebooks_to_keep].sum(axis=1)
@@ -81,9 +96,12 @@ def process_class_data(config):
     # get today's date
     date = pd.Timestamp.today().strftime("%Y-%m-%d")
 
+    # Construct the absolute path to the service account key
+    service_account_key_path = os.path.join(script_dir, "..", "..", "..", "ServiceAccountsKey.json")
+
     cviceni_plneni = google_conf.setup(
         sheet_url=sheet_url,
-        service_account_path="../../../ServiceAccountsKey.json")
+        service_account_path=service_account_key_path)  # Use the absolute path here
 
     # upload the data to google sheets
     n = 0
@@ -97,15 +115,26 @@ def process_class_data(config):
                 sheet_name = f"{class_name.lower()}_{date}_{n}"  # Incremented name
 
             # Create the worksheet and upload the DataFrame
-            google_conf.set_with_dataframe(cviceni_plneni.add_worksheet(sheet_name, rows=1, cols=1), merged_df.reset_index())
+            google_conf.set_with_dataframe(cviceni_plneni.add_worksheet(sheet_name, rows=1, cols=1),
+                                           merged_df.reset_index())
             sheet_created = True  # If successful, mark as created
             print(f"Successfully uploaded data for {class_name} to sheet: {sheet_name}")
         except Exception as e:
             n += 1
             print(f"Worksheet with name '{sheet_name}' already exists for {class_name}. Trying another name...")
-            if n > 10: # Prevent infinite loop in case of persistent error
+            if n > 10:  # Prevent infinite loop in case of persistent error
                 print(f"Failed to create a unique sheet name for {class_name} after multiple attempts. Error: {e}")
                 break
+
+# Add date range check for cron job execution
+today = datetime.date.today()
+start_date = datetime.date(2026, 3, 31)
+end_date = datetime.date(2026, 8, 31) # End of August
+
+if not (start_date <= today <= end_date):
+    print(f"Script not running today ({today}) as it's outside the scheduled range ({start_date} to {end_date}).")
+    # Exit the script if outside the date range, so it doesn't proceed with data processing
+    exit()
 
 # Iterate through each class configuration and process the data
 for config in class_configurations:
