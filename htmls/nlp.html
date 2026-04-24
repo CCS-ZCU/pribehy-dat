@@ -7554,7 +7554,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>V tomto cvičení je konfigurace potřebných knihoven o něco komplexnější a probíhá ve třech krocích.</p>
+<p>V tomto cvičení je konfigurace potřebných knihoven o něco komplexnější.</p>
 </div>
 </div>
 </div>
@@ -7566,44 +7566,8 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">scripts.nlp_backup</span><span class="w"> </span><span class="kn">import</span> <span class="n">patocka_all_df</span>
-<span class="o">%%capture</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="s2">"numpy&lt;2"</span> <span class="o">--</span><span class="n">force</span><span class="o">-</span><span class="n">reinstall</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">stanza</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">gensim</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># náš notebook se nyní restartoval, což po instalaci specifických knihoven potřebujeme</span>
-<span class="c1"># Uvidíme chybovou hlášku "Your session crashed for an unknown reason.", která je ale v našem případě naprosto v pořádku.</span>
-
-<span class="c1"># Můžeme tedy pokročit dále.</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="o">%%capture</span>
+<span class="ch">#!pip install stanza</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">stanza</span>
 <span class="n">stanza</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
 <span class="n">czech_pipeline</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s2">"cs"</span><span class="p">)</span>
@@ -7618,7 +7582,7 @@ a.anchor-link {
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span> <span class="c1"># modul pro pokročilejší matematické operace</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">TruncatedSVD</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gensim.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeyedVectors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
 </pre></div>
 </div>
 </div>
@@ -7635,17 +7599,134 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="s2">"https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/refs/heads/master/data/patocka_all_raw_df.parquet"</span><span class="p">)</span>
-<span class="n">patocka_all_df</span>
+<span class="n">patocka_all_df</span> <span class="o">=</span> <span class="n">patocka_all_df</span><span class="p">[</span><span class="n">patocka_all_df</span><span class="p">[</span><span class="s2">"rawtext"</span><span class="p">]</span><span class="o">.</span><span class="n">notnull</span><span class="p">()]</span> <span class="c1"># omezíme se pouze na řádky s dostupnými textovými daty</span>
+<span class="n">patocka_all_df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>url</th>
+<th>title</th>
+<th>date</th>
+<th>rawtext</th>
+</tr>
+<tr>
+<th>ajp_id</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>98</th>
+<td>https://archiv.janpatocka.cz/items/show/98</td>
+<td>Recenze na: J. Kratochvil, Meditace věků. Ději...</td>
+<td>1932</td>
+<td>Josef Kratochvil: Meditace věků. Dějinný vývoj...</td>
+</tr>
+<tr>
+<th>66</th>
+<td>https://archiv.janpatocka.cz/items/show/66</td>
+<td>Recenze na: J. Benda, La fin de l’éternel</td>
+<td>1929</td>
+<td>Julien Benda, La fin de 1’eternel, Paris, Gall...</td>
+</tr>
+<tr>
+<th>30</th>
+<td>https://archiv.janpatocka.cz/items/show/30</td>
+<td>Gorgias\n</td>
+<td>None</td>
+<td>﻿Ještě ve stručnosti zopakuji hlavní body té K...</td>
+</tr>
+<tr>
+<th>95</th>
+<td>https://archiv.janpatocka.cz/items/show/95</td>
+<td>Recenze na: G. Ipsen, Sprachphilosophie der Ge...</td>
+<td>1932</td>
+<td>Philosophische Forschungsberichte, Junker und ...</td>
+</tr>
+<tr>
+<th>25</th>
+<td>https://archiv.janpatocka.cz/items/show/25</td>
+<td>Mýtus, Ion\n</td>
+<td>None</td>
+<td>﻿Minule jsme si říkali, že výchova, @παιδεία#,...</td>
+</tr>
+<tr>
+<th>72</th>
+<td>https://archiv.janpatocka.cz/items/show/72</td>
+<td>Recenze na: W. James, Druhy náboženské zkušenosti</td>
+<td>1930</td>
+<td>William James: Druhy náboženské zkušenosti, př...</td>
+</tr>
+<tr>
+<th>953</th>
+<td>https://archiv.janpatocka.cz/items/show/953</td>
+<td>Nebezpečí technizace ve vědě u E. Husserla a b...</td>
+<td>1979</td>
+<td>Nebezpečí technizace ve vědě u Edmunda Husserl...</td>
+</tr>
+<tr>
+<th>2665</th>
+<td>https://archiv.janpatocka.cz/items/show/2665</td>
+<td>Zodpovědnost</td>
+<td>None</td>
+<td>[Zodpovědnost]1 ...skromně myslím, že etika so...</td>
+</tr>
+<tr>
+<th>59</th>
+<td>https://archiv.janpatocka.cz/items/show/59</td>
+<td>Recenze na: F. Enriques, L’évolution de la log...</td>
+<td>1929</td>
+<td>Enriqués, Fedcrigo : L’Evolution de la Logique...</td>
+</tr>
+<tr>
+<th>2667</th>
+<td>https://archiv.janpatocka.cz/items/show/2667</td>
+<td>Studie o času II</td>
+<td>None</td>
+<td>[Studie o času II]1 Pojem historického času ja...</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -7679,10 +7760,10 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">doc_id</span> <span class="o">=</span> <span class="mi">308</span>     <span class="c1"># před symbolem hashtagu doplňte id dokumentu z tabulky patocka_all_df</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">doc_id</span> <span class="o">=</span>      <span class="c1"># před symbolem hashtagu doplňte id dokumentu z tabulky patocka_all_df</span>
 <span class="n">url</span> <span class="o">=</span> <span class="s2">"https://archiv.janpatocka.cz/items/show/"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc_id</span><span class="p">)</span>
 <span class="n">url</span>
 </pre></div>
@@ -7695,10 +7776,10 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Tato buňka slouží ke kontrole průchodu tímto cvičením. </span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Tato buňka slouží ke kontrole průchodu tímto cvičením.</span>
 <span class="c1"># Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.</span>
 <span class="n">exec</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download"</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 <span class="n">kontrola_pruchodu</span><span class="p">(</span><span class="n">ntb</span><span class="o">=</span><span class="s2">"nlp"</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
@@ -7723,7 +7804,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">doc_df</span> <span class="o">=</span> <span class="n">patocka_all_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">doc_id</span><span class="p">]</span>
@@ -7738,7 +7819,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># můžeme odtud vyvolat název dokumentu:</span>
@@ -7753,7 +7834,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ...ale zejména jeho text</span>
@@ -7770,7 +7851,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># dokument jako list slov získáme pomocí funkce "split()"</span>
@@ -7788,7 +7869,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1">### pomocí funkce "len()" spočítáme délku tohoto listu slov:</span>
@@ -7820,7 +7901,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">sent</span> <span class="o">=</span> <span class="s2">"Česká republika je velmi sebevědomý stát, který dokáže stát na vlastních nohách."</span>
@@ -7836,7 +7917,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># jiný příklad ukáže limity tohoto modelu:</span>
@@ -7853,7 +7934,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># nyní aplikujeme na celý Patočkův dokument.</span>
@@ -7880,7 +7961,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
@@ -7916,7 +7997,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">lemmatized_sentences</span> <span class="o">=</span> <span class="p">[]</span>
@@ -7936,7 +8017,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">lemmatized_sentences</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
@@ -7961,7 +8042,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># nejprve si z naší filtrované tabulky vyxtrahujeme lemmata samotná</span>
@@ -7992,7 +8073,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># kvůli horizontálnímu zobrazení prohodíme pořadí na našem listu</span>
@@ -8032,7 +8113,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">vocabulary</span> <span class="o">=</span> <span class="p">[</span><span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">lemmata_freq</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">100</span><span class="p">)]</span>
@@ -8051,7 +8132,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">kontrola_pruchodu</span><span class="p">(</span><span class="n">ntb</span><span class="o">=</span><span class="s2">"nlp"</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
@@ -8100,7 +8181,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
@@ -8126,7 +8207,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [21]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_lemmatized_sents</span><span class="p">(</span><span class="n">rawtext</span><span class="p">):</span>
@@ -8152,7 +8233,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span><span class="p">[</span><span class="s2">"lemmatized_sents"</span><span class="p">]</span> <span class="o">=</span> <span class="n">patocka_all_df</span><span class="p">[</span><span class="s2">"rawtext"</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">get_lemmatized_sents</span><span class="p">)</span>
@@ -8161,28 +8242,196 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># v případě přeskočení předchozí buňky je potřeba v této buňce odmazat hashtag (#) na začátku následující řádky:</span>
 <span class="c1"># patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")</span>
+<span class="c1"># patocka_all_df = patocka_all_df[patocka_all_df["rawtext"].notnull()] # omezíme se pouze na řádky s dostupnými textovými daty</span>
 <span class="n">patocka_all_df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/tmp/ipykernel_565/2849559750.py:2: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+/tmp/ipykernel_565/2849559750.py:2: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+/tmp/ipykernel_565/2849559750.py:2: FutureWarning: The behavior of 'to_datetime' with 'unit' when parsing strings is deprecated. In a future version, strings will be parsed as datetime strings, matching the behavior without a 'unit'. To retain the old behavior, explicitly cast ints or floats to numeric type before calling to_datetime.
+  patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[23]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div class="colab-df-container" id="df-7f616f1d-4316-4fcf-9633-2233e2ac98c4">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>url</th>
+<th>title</th>
+<th>date</th>
+<th>rawtext</th>
+<th>lemmatized_sents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>https://archiv.janpatocka.cz/items/show/98</td>
+<td>Recenze na: J. Kratochvil, Meditace věků. Ději...</td>
+<td>1932</td>
+<td>Josef Kratochvil: Meditace věků. Dějinný vývoj...</td>
+<td>[[Josef, Kratochvil, meditace, věk], [dějinný,...</td>
+</tr>
+<tr>
+<th>1</th>
+<td>https://archiv.janpatocka.cz/items/show/335</td>
+<td>Recenze na: H. Gouhier, La jeunesse d’Auguste ...</td>
+<td>1936</td>
+<td>None</td>
+<td>[]</td>
+</tr>
+<tr>
+<th>2</th>
+<td>https://archiv.janpatocka.cz/items/show/66</td>
+<td>Recenze na: J. Benda, La fin de l’éternel</td>
+<td>1929</td>
+<td>Julien Benda, La fin de 1’eternel, Paris, Gall...</td>
+<td>[[Julien, Benda], [strana, cena, frs], [nový, ...</td>
+</tr>
+<tr>
+<th>3</th>
+<td>https://archiv.janpatocka.cz/items/show/30</td>
+<td>Gorgias\n</td>
+<td>None</td>
+<td>﻿Ještě ve stručnosti zopakuji hlavní body té K...</td>
+<td>[[stručnost, zopakovat, hlavní, bod, Kallikleů...</td>
+</tr>
+<tr>
+<th>4</th>
+<td>https://archiv.janpatocka.cz/items/show/95</td>
+<td>Recenze na: G. Ipsen, Sprachphilosophie der Ge...</td>
+<td>1932</td>
+<td>Philosophische Forschungsberichte, Junker und ...</td>
+<td>[[Berlin], [Heft, Gunther, Ipsen, 8°, strana, ...</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="colab-df-buttons">
+<div class="colab-df-container">
+<button class="colab-df-convert" onclick="convertToInteractive('df-7f616f1d-4316-4fcf-9633-2233e2ac98c4')" style="display:none;" title="Convert this dataframe to an interactive table.">
+<svg height="24px" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
+<path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+</svg>
+</button>
+<style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+<script>
+      const buttonEl =
+        document.querySelector('#df-7f616f1d-4316-4fcf-9633-2233e2ac98c4 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-7f616f1d-4316-4fcf-9633-2233e2ac98c4');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">patocka_all_df</span><span class="o">.</span><span class="n">shape</span>
@@ -8191,12 +8440,24 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[24]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>(363, 5)</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [25]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># získaná data si vyexportujeme do samosatné proměnné v podobě listu lematizovaných vět a ten následně také do listu lematizovaných slov.</span>
@@ -8212,12 +8473,33 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[25]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>[('mít', 3801),
+ ('život', 2831),
+ ('svět', 2785),
+ ('moci', 2634),
+ ('smysl', 2580),
+ ('věc', 2569),
+ ('člověk', 2182),
+ ('způsob', 1713),
+ ('bytí', 1614),
+ ('muset', 1502)]</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># z těchto dat opět vytvoříme matici spoluvýskytů</span>
@@ -8231,12 +8513,264 @@ a.anchor-link {
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[26]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div class="colab-df-container" id="df-41eb2dbc-d8db-4a87-a1f5-b142b3154db9">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>mít</th>
+<th>život</th>
+<th>svět</th>
+<th>moci</th>
+<th>smysl</th>
+<th>věc</th>
+<th>člověk</th>
+<th>způsob</th>
+<th>bytí</th>
+<th>muset</th>
+<th>...</th>
+<th>ideál</th>
+<th>začínat</th>
+<th>rok</th>
+<th>vnímání</th>
+<th>jednoduchý</th>
+<th>centrum</th>
+<th>učinit</th>
+<th>zjevovat</th>
+<th>dojem</th>
+<th>přel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>mít</th>
+<td>5015</td>
+<td>424</td>
+<td>422</td>
+<td>539</td>
+<td>762</td>
+<td>512</td>
+<td>444</td>
+<td>240</td>
+<td>272</td>
+<td>439</td>
+<td>...</td>
+<td>19</td>
+<td>22</td>
+<td>5</td>
+<td>15</td>
+<td>17</td>
+<td>15</td>
+<td>16</td>
+<td>26</td>
+<td>43</td>
+<td>4</td>
+</tr>
+<tr>
+<th>život</th>
+<td>424</td>
+<td>4589</td>
+<td>413</td>
+<td>298</td>
+<td>425</td>
+<td>233</td>
+<td>551</td>
+<td>333</td>
+<td>169</td>
+<td>174</td>
+<td>...</td>
+<td>21</td>
+<td>12</td>
+<td>1</td>
+<td>9</td>
+<td>18</td>
+<td>20</td>
+<td>9</td>
+<td>5</td>
+<td>12</td>
+<td>8</td>
+</tr>
+<tr>
+<th>svět</th>
+<td>422</td>
+<td>413</td>
+<td>4361</td>
+<td>316</td>
+<td>366</td>
+<td>335</td>
+<td>410</td>
+<td>211</td>
+<td>284</td>
+<td>160</td>
+<td>...</td>
+<td>5</td>
+<td>10</td>
+<td>7</td>
+<td>9</td>
+<td>10</td>
+<td>12</td>
+<td>15</td>
+<td>40</td>
+<td>12</td>
+<td>6</td>
+</tr>
+<tr>
+<th>moci</th>
+<td>539</td>
+<td>298</td>
+<td>316</td>
+<td>3392</td>
+<td>480</td>
+<td>348</td>
+<td>314</td>
+<td>251</td>
+<td>254</td>
+<td>287</td>
+<td>...</td>
+<td>14</td>
+<td>7</td>
+<td>7</td>
+<td>8</td>
+<td>17</td>
+<td>6</td>
+<td>10</td>
+<td>21</td>
+<td>21</td>
+<td>5</td>
+</tr>
+<tr>
+<th>smysl</th>
+<td>762</td>
+<td>425</td>
+<td>366</td>
+<td>480</td>
+<td>3614</td>
+<td>294</td>
+<td>293</td>
+<td>190</td>
+<td>294</td>
+<td>196</td>
+<td>...</td>
+<td>13</td>
+<td>9</td>
+<td>5</td>
+<td>6</td>
+<td>15</td>
+<td>12</td>
+<td>14</td>
+<td>35</td>
+<td>8</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>5 rows × 500 columns</p>
+</div>
+<div class="colab-df-buttons">
+<div class="colab-df-container">
+<button class="colab-df-convert" onclick="convertToInteractive('df-41eb2dbc-d8db-4a87-a1f5-b142b3154db9')" style="display:none;" title="Convert this dataframe to an interactive table.">
+<svg height="24px" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
+<path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+</svg>
+</button>
+<style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+<script>
+      const buttonEl =
+        document.querySelector('#df-41eb2dbc-d8db-4a87-a1f5-b142b3154db9 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-41eb2dbc-d8db-4a87-a1f5-b142b3154db9');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># pro efektivitu analýz zredukujeme dimenzionalitu</span>
@@ -8247,43 +8781,206 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [30]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># takto zprocesovaná data nyní pojmeme jako tzv. slovní embeddingy, zachycující, která slova jsou si u Patočky sémanticky blízká.</span>
-<span class="n">kv</span> <span class="o">=</span> <span class="n">KeyedVectors</span><span class="p">(</span><span class="n">vector_size</span><span class="o">=</span><span class="n">X_reduced</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-<span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">,</span> <span class="n">X_reduced</span><span class="p">):</span>
-  <span class="n">kv</span><span class="o">.</span><span class="n">add_vector</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">embeddings_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_reduced</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">vocabulary</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">most_similar</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">embeddings_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Slovo '</span><span class="si">{</span><span class="n">word</span><span class="si">}</span><span class="s2">' není ve slovníku."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">word_vector</span> <span class="o">=</span> <span class="n">embeddings_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">word</span><span class="p">]]</span>
+    <span class="n">similarities</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">(</span><span class="n">word_vector</span><span class="p">,</span> <span class="n">embeddings_df</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s2">"word"</span><span class="p">:</span> <span class="n">embeddings_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+        <span class="s2">"similarity"</span><span class="p">:</span> <span class="n">similarities</span>
+    <span class="p">})</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="s2">"word"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">word</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"similarity"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="n">most_similar</span><span class="p">(</span><span class="s2">"svět"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[28]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div class="colab-df-container" id="df-cd95562c-dc03-46c9-986d-d159dfcbfe1b">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>word</th>
+<th>similarity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>155</th>
+<td>přirozený</td>
+<td>0.897479</td>
+</tr>
+<tr>
+<th>420</th>
+<td>naivní</td>
+<td>0.775278</td>
+</tr>
+<tr>
+<th>467</th>
+<td>technický</td>
+<td>0.745130</td>
+</tr>
+<tr>
+<th>265</th>
+<td>božský</td>
+<td>0.709536</td>
+</tr>
+<tr>
+<th>464</th>
+<td>okolí</td>
+<td>0.666563</td>
+</tr>
+<tr>
+<th>378</th>
+<td>horizont</td>
+<td>0.664741</td>
+</tr>
+<tr>
+<th>396</th>
+<td>křesťanství</td>
+<td>0.661613</td>
+</tr>
+<tr>
+<th>279</th>
+<td>víra</td>
+<td>0.634888</td>
+</tr>
+<tr>
+<th>479</th>
+<td>radikální</td>
+<td>0.634267</td>
+</tr>
+<tr>
+<th>418</th>
+<td>pochopitelný</td>
+<td>0.634215</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="colab-df-buttons">
+<div class="colab-df-container">
+<button class="colab-df-convert" onclick="convertToInteractive('df-cd95562c-dc03-46c9-986d-d159dfcbfe1b')" style="display:none;" title="Convert this dataframe to an interactive table.">
+<svg height="24px" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
+<path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"></path>
+</svg>
+</button>
+<style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+<script>
+      const buttonEl =
+        document.querySelector('#df-cd95562c-dc03-46c9-986d-d159dfcbfe1b button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-cd95562c-dc03-46c9-986d-d159dfcbfe1b');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [31]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">kv</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="s2">"svět"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [32]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span> 
