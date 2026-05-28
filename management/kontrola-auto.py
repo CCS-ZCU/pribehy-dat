@@ -26,7 +26,7 @@ class_configurations = [
 
 def clean_user(user):
     try:
-        return re.search(r"F\d+\w\d+[PK]?", user.replace("O", "0"), re.IGNORECASE).group()
+        return re.search(r"[A-Z]\d+\w\d+[PK]?", user.replace("O", "0"), re.IGNORECASE).group()
     except:
         print(user)
         return None  # Return None for users that don't match the pattern
