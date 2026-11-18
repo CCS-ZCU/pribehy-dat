@@ -215,3 +215,10 @@ vyváření proměnných a manipulaci s nimi prostřednictvím předdefinovanýc
 [^3]: Posner, M. (2015). Humanities Data: A Necessary Contradiction. https://miriamposner.com/blog/humanities-data-a-necessary-contradiction/
     
 [^4]: Gitelman, L. (Ed.). (2013). “Raw data” is an oxymoron. The MIT Press.
+
+## Repository housekeeping
+
+IDE artifacts (`.idea/`, `*.iml`) and Jupyter checkpoints (`.ipynb_checkpoints/`)
+are not tracked. Bulk data and model directories (`large_files/`, `large_data/`)
+are never committed; keep large inputs and outputs there. See the
+[organizer](https://github.com/kasev/organizer) workspace for the shared workflow.

@@ -1,0 +1,3813 @@
+
+============================================================
+FILE: abm.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/abm.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# ABM: Modelování založené na agentech
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+Toto cvičení nás uvádí do metodologie sociálních simulací, nebo úžeji ABM (=agent based modeling). Konkrétně budeme pracovat s jedním velice známým modelem, který navhrl již počátkem 70. let americký ekonom [Thomas Schelling](https://en.wikipedia.org/wiki/Thomas_Schelling). Tento model na velice abstraktní úrovni ukazuje, jak i v zásadě tolerantní prostředí může vést k segregaci společnosti. Základem modelu je množina agentů (lidí), kteří jsou rozmístěni v určitém prostoru ve formě jakési mřížky či šachovnice. Základní vlastností každého agenta je informace o tom, kolik jeho sousedů (agentů na okolních buňkách mřížky) je ze stejné nebo odlišné skupiny než on, což je typicky odlišeno barvou. Tato informace je základem binárního atributu spokojenosti (happiness): Agent je spokojený tehdy, pokud je alespoň určité procento jeho sousedů (např. 30 %) ze stejné skupiny (barvy) jako on.
+
+Model poté probíhá v několika po sobě jdoucích krocích:
+* Inicializace: Agenti jsou náhodně rozmístěni v prostoru.
+* Akce: Každý agent zvažuje své okolí a rozhoduje se, zda je spokojen se svým umístěním. Pokud je spokojen, nic nedělá. Pokud není spokojen, náhodně se přesouvá na jiné volné místo.
+* Aktualizace: Provede se aktualizace stavu prostředí.
+
+Tento proces se opakuje, dokud není dosaženo stabilního stavu, kdy už žádný agent nemá potřebu se přesunout, tj. všichni agenti jsou spokojeni. Výsledkem tohoto modelu může být zajímavé chování, kde malé individuální preference vedou k výrazné segregaci v populaci, přestože žádný jednotlivec nemá silnou preferenci pro segregaci.
+
+Tento model je ve známé podobě implementován v programu netlogo ([Segregation](https://www.netlogoweb.org/launch#https://www.netlogoweb.org/assets/modelslib/Sample%20Models/Social%20Science/Segregation.nlogo)), kde je možné si k němu načíst dovysvětlující informace.
+
+Na rozdíl od jiných cvičení v této sestavě elektronických opor, toto cvičení je přejato téměř beze změny z dokumentace ke knihovně [agentpy](https://agentpy.readthedocs.io) (viz [zde](https://agentpy.readthedocs.io/en/latest/agentpy_segregation.html)), odkud je převzat i průvodní text v angličtině.
+
+[CODE]
+%%capture
+!pip install agentpy
+import os
+#os._exit(00)
+
+[CODE]
+# Model design
+import agentpy as ap
+import random
+import requests
+
+# Visualization
+import matplotlib.pyplot as plt
+import seaborn as sns
+import IPython
+from IPython.display import display
+
+[MARKDOWN]
+## About the model
+
+The model is based on the [NetLogo Segregation model](http://ccl.northwestern.edu/netlogo/models/Segregation) from Uri Wilensky, who describes it as follows:
+
+>This project models the behavior of two types of agents in a neighborhood. The orange agents and blue agents get along with one another. But each agent wants to make sure that it lives near some of "its own." That is, each orange agent wants to live near at least some orange agents, and each blue agent wants to live near at least some blue agents. The simulation shows how these individual preferences ripple through the neighborhood, leading to large-scale patterns.
+
+[MARKDOWN]
+## Model definition
+
+[MARKDOWN]
+To start, we define our agents, who initiate with a random group
+and have two methods to check whether they are happy and to
+move to a new location if they are not.
+
+[CODE]
+class Person(ap.Agent):
+
+    def setup(self):
+        """ Initiate agent attributes. """
+        self.grid = self.model.grid
+        self.random = self.model.random
+        self.group = self.random.choice(range(self.p.n_groups))
+        self.share_similar = 0
+        self.happy = False
+
+    def update_happiness(self):
+        """ Be happy if rate of similar neighbors is high enough. """
+        neighbors = self.grid.neighbors(self)
+        similar = len([n for n in neighbors if n.group == self.group])
+        ln = len(neighbors)
+        self.share_similar = similar / ln if ln > 0 else 0
+        self.happy = self.share_similar >= self.p.want_similar
+
+    def find_new_home(self):
+        """ Move to random free spot and update free spots. """
+        new_spot = self.random.choice(self.model.grid.empty)
+        self.grid.move_to(self, new_spot)
+
+[MARKDOWN]
+Next, we define our model, which consists of our agens and a spatial grid environment.
+At every step, unhappy people move to a new location.
+After every step (update), agents update their happiness.
+If all agents are happy, the simulation is stopped.
+
+[CODE]
+class SegregationModel(ap.Model):
+
+    def setup(self):
+
+        # Parameters
+        s = self.p.size
+        n = self.n = int(self.p.density * (s ** 2))
+
+        # Create grid and agents
+        self.grid = ap.Grid(self, (s, s), track_empty=True)
+        self.agents = ap.AgentList(self, n, Person)
+        self.grid.add_agents(self.agents, random=True, empty=True)
+
+    def update(self):
+        # Update list of unhappy people
+        self.agents.update_happiness()
+        self.unhappy = self.agents.select(self.agents.happy == False)
+
+        # Stop simulation if all are happy
+        if len(self.unhappy) == 0:
+            self.stop()
+
+    def step(self):
+        # Move unhappy people to new location
+        self.unhappy.find_new_home()
+
+    def get_segregation(self):
+        # Calculate average percentage of similar neighbors
+        return round(sum(self.agents.share_similar) / self.n, 2)
+
+    def end(self):
+        # Measure segregation at the end of the simulation
+        self.report('segregation', self.get_segregation())
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="abm", arg1=1)
+
+[MARKDOWN]
+## Single-run animation
+
+[MARKDOWN]
+Uri Wilensky explains the dynamic of the segregation model as follows:
+
+>Agents are randomly distributed throughout the neighborhood. But many agents are "unhappy" since they don't have enough same-color neighbors. The unhappy agents move to new locations in the vicinity. But in the new locations, they might tip the balance of the local population, prompting other agents to leave. If a few agents move into an area, the local blue agents might leave. But when the blue agents move to a new area, they might prompt orange agents to leave that area.
+>
+>Over time, the number of unhappy agents decreases. But the neighborhood becomes more segregated, with clusters of orange agents and clusters of blue agents.
+>
+>In the case where each agent wants at least 30% same-color neighbors, the agents end up with (on average) 70% same-color neighbors. So relatively small individual preferences can lead to significant overall segregation.
+
+To observe this effect in our model, we can create an animation of a single run.  
+To do so, we first set up an instance of our model with a chosen set of parameters.
+
+[CODE]
+parameters = {
+    'want_similar': 0.3, # For agents to be happy
+    'n_groups': 2, # Number of groups
+    'density': 0.95, # Density of population
+    'size': 100, # Height and length of the grid
+    'steps': 100  # Maximum number of steps
+    }
+
+[MARKDOWN]
+We can now create an animation plot and display it directly in Jupyter as follows.
+
+[CODE]
+def animation_plot(model, ax):
+    group_grid = model.grid.attr_grid('group')
+    ap.gridplot(group_grid, cmap='Accent', ax=ax)
+    ax.set_title(f"Segregation model \n Time-step: {model.t}, "
+                 f"Segregation: {model.get_segregation()}")
+
+fig, ax = plt.subplots()
+model = SegregationModel(parameters)
+animation = ap.animate(model, fig, ax, animation_plot)
+display(IPython.display.HTML(animation.to_jshtml()))
+
+[MARKDOWN]
+## Multi-run experiment
+
+[MARKDOWN]
+To explore how different individual preferences lead to different average levels of segregation, we can conduct a multi-run experiment.
+To do so, we first prepare a parameter sample that includes different values for peoples' preferences and the population density.
+
+[CODE]
+parameters_multi = dict(parameters)
+parameters_multi.update({
+    'want_similar': ap.Values(0,0.125, 0.25, 0.375, 0.5, 0.625),
+    'density': ap.Values(0.5, 0.7, 0.95),
+})
+sample = ap.Sample(parameters_multi)
+
+[MARKDOWN]
+We now run an experiment where we simulate each parameter combination in our sample over 5 iterations.
+
+[CODE]
+exp = ap.Experiment(SegregationModel, sample, iterations=5)
+results = exp.run()
+
+[MARKDOWN]
+Finally, we can arrange the results from our experiment into a dataframe with measures and variable parameters,
+and use the seaborn library to visualize the different segregation levels over our parameter ranges.
+
+[CODE]
+sns.set_theme()
+sns.lineplot(
+    data=results.arrange_reporters(),
+    x='want_similar',
+    y='segregation',
+    hue='density'
+);
+
+[CODE]
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="abm", arg1=2)
+
+============================================================
+FILE: api.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/api.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+[MARKDOWN]
+# API: Aplikační rozhraní
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+Systém dotazování v podobě URL adres a odpovídání na ně v podobě dat, kterým jsme se zabývali v předchozí kapitole, je někdy standardizovaný do podoby tzv. **API**: Application Programming Interface, kdy vracená data již nemají podobu webových stránek, ale specificky strukturovaných dat, nad kterými vývojář zajásá. Tímto způsobem se na našich chytrých telefonech například aktualizují data o počasí (viz např. dokumentaci k API od [OpenWeatherMap](https://openweathermap.org/api/one-call-3#current)).  Aby však nedošlo k přetížení či zneužití těchto služeb, většina API vyžaduje nějakou formu autorizace, nejčastěji ve formě jakéhosi automaticky generovaného klíče či tokenu pro registrované uživatele.
+
+Tato technologie je využívána i pro potřeby zpřístupňování dat z oblasti péče o kulturní dědictví. V této kapitole si ukážeme několik příkladů těchto webových služeb.
+
+[MARKDOWN]
+Projekt Epigraphic Database Heidelberg hostí digitalizovanou kolekci více než 80,000 převážně latinských nápisů z antického Říma. Tyto nápisy si veřejnost může prohlížet a prohledávat za využití webových stránek [zde](https://edh.ub.uni-heidelberg.de/inschrift/suche). Kromě toho má však badatel ještě jinou možnost, jak se dostat k příslušným datům, a totiž právě za využití speciálně vyvinutého API, které je zdokumentováno [zde](https://edh.ub.uni-heidelberg.de/data/api).
+
+V této dokumentaci se podrobně dočteme, jaké parametry můžeme v našem dotazu (query) použít a jak. 
+
+Základní URL adresa je `https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?`, za níž připojujeme parametry pro určení námi hledaného nápisu či skupiny nápisů.
+
+[MARKDOWN]
+Každý nápis v EDH databázi má svůj jednoznačný číslený identifikátor. Jako příklad může posloužit nápis s identifikačním číslem "HD000010", který je přes webové rozhraní přístupný [zde](https://edh.ub.uni-heidelberg.de/inschrift/suche?hd_nr=000010&tm_nr=&fo_antik=&fo_modern=&fundstelle=&region=&compFundjahr=eq&fundjahr=&aufbewahrung=&compHoehe=eq&hoehe=&compBreite=eq&breite=&compTiefe=eq&tiefe=&bh=&dat_tag=&dat_monat=&jahre=600+BC+-+1500+AD&literatur=&kommentar=&p_name=&p_praenomen=&p_nomen=&p_cognomen=&p_supernomen=&p_origo=&p_geschlecht=&p_ljahre_comp=gt&p_ljahre=&p_lmonate_comp=gt&p_lmonate=&p_ltage_comp=gt&p_ltage=&p_lstunden_comp=gt&p_lstunden=&atext1=&bool=AND&atext2=&sort=hd_nr&anzahl=20).
+
+Známe-li ID nápisu, můžeme se dostat k datům o něm přes API takto:
+
+```
+https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?hd_nr=000010
+```
+Vyzkoušejme nejprve v prohlížeči! Vidíme datový obsah bez jakéhokoli formátování. 
+
+Chceme-li např. získat data o všech nápisech z Římské provincie *Germania superior*, nastavíme parametr "provinz" na hodnotu "ges" (Tyto parametry a jejich hodnoty samozřejmě nestanovujeme z hlavy, ale snažíme se je vyčíst z dokumentace. Někdy však musíme trochu experimentovat). Výsledná URL adresa pak vypadá takto:
+
+```
+https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?provinz=ges
+```
+
+[MARKDOWN]
+## Cvičení
+
+[CODE]
+# naimportujeme si několik knihoven
+import requests # python knihovna pro vznášení HTTP dotazů
+from bs4 import BeautifulSoup # python knihovna pro práci s daty ve formátu html či xml
+import pandas as pd
+
+[MARKDOWN]
+Nyní si to vyzkoušejme v praxi za využití Pythonu a knihoven requests, BeautifulSoup, a pandas, které jsme již použili v předchozích kapitolách.
+* Naše výchozí adresa bude vypadat vždy stejně, uložme si ji do proměnné `base_url`.
+* Následně specifikujme náš dotaz, tzv. `query`. 
+* Tento dotaz nyní vzneseme prostřednictvím knihovny `requests` a odpověď si uložme jako objekt `resp`.
+
+[CODE]
+base_url = 'https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?'
+query = 'hd_nr=000010'
+resp = requests.get(base_url + query)
+
+[MARKDOWN]
+Podíjme se na obsah atributu `.text`:
+
+[CODE]
+resp.text
+
+[MARKDOWN]
+Vidíme totéž, co jsme viděli v prohlížeči. Na první pohled tato data možná nepůsobí příliš vábně, ale datový analytik zájásí. Použité speciální znaky jako "{", "}", "[", a "]" v kombinaci s dvojtečkami totiž indikují, že vrácená data jsou strukturována v tzv. **JSON** struktuře. JSON (=JavaScript Object Notation) je v současnosti velice populární způsob strukturovaného zápisu dat, s kterým si dokáže poradit velké množství programů. 
+
+Pro uživatele Pythonu je JSON zvláště přitažlivý, neboť se jedná v podstatě o strukturu do sebe se zanořujících objektů typu `dict` a `list`. Takto tato data načteme do Pythonu prostřednictvím metody `json()`.
+
+[CODE]
+data_json = resp.json()
+data_json
+
+[MARKDOWN]
+Nyní již data vypadají úhledněji. Vzpomeňme na syntaxi objektů typu `dict` a `list`. Vypišme si všechny klíče našeho JSON objektu: 
+
+[CODE]
+data_json.keys()
+
+[MARKDOWN]
+V tuto chvíli je pro nás nejzajímavější položka "items", kde jsou uschována data pro nápisy jako takové. Tyto "items" mají podobu datové struktury typu `list`. Jelikož však máme co do činění pouze s jedním nápisem, nachází se zde jediný prvek (viz též klíč "total"). 
+
+K tomuto prvku se musíme dostat prostřednictvím indexování - jeho index bude 0.
+
+Samotný prvek má opět podobu `dict`. Jednotlivé klíče pak definují jednotlivé proměnné definující daný nápis.
+ 
+
+[CODE]
+data_json["items"][0]
+
+[MARKDOWN]
+Chceme-li získat text tohoto nápisu
+
+[CODE]
+#Chceme-li získat text tohoto nápisu, použijeme klíč "transcription"
+data_json["items"][0]["transcription"]
+
+[CODE]
+#Chceme-li získat informaci o tom, ze kdy nápis pochází, použijeme klíče "not_before" a "not_after"
+data_json["items"][0]["not_before"]
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="api", arg1=data_json)
+
+[MARKDOWN]
+Vznesme nyní dotaz na nápisy z území ČR (bude jich podle všeho pouze omezené množství, neboť na našem území Římané aktivně nepůsobili.
+
+[CODE]
+base_url = 'https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?'
+query = 'land=cz' ## &not_after=251'
+resp = requests.get(base_url + query)
+data_json = resp.json()
+data_json
+
+[CODE]
+# klíč "total" podává informaci o celkovém počtu vrácených položek:
+data_json["total"]
+
+[MARKDOWN]
+Chceme-li získat text šestého nápisu v pořadí, budeme jej indexovat pomocí hodnoty 5 a následně použijeme klíč "transcription"
+
+[CODE]
+data_json["items"][5]["transcription"]
+
+[MARKDOWN]
+V této podobě však práce s daty není zcela nejpraktičtější. Velká výhoda JSONu však je, že tato data můžeme snadno převést např. do tabulkové podoby objektu typu `pandas.DataFrame`. Klíče se automaticky stanou názvy sloupců: 
+
+[CODE]
+data_df = pd.DataFrame(data_json["items"])
+data_df
+
+[MARKDOWN]
+V případě, že náš dotaz odpovídá většímu množství položek, API nám často vrátí pouze první "stránku" hodnot. V případě EDH API je na první stránce pouze dvacet prvních hodnot. To je případ níže. 
+
+[CODE]
+base_url = 'https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?'
+query = 'provinz=ges' ## &not_after=251'
+resp = requests.get(base_url + query)
+data_json = resp.json()
+data_json
+
+[CODE]
+data_json["total"]
+
+[MARKDOWN]
+Nyní vidíme, že celkový počet položek je 6832 (viz `data_json["total"]`). Na stránce však máme pouze prvních dvacet. 
+Chceme-li získat data z druhé stránky, musíme vznést nový dotaz a nastavit v něm parametr "offset".
+
+[CODE]
+base_url = 'https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?'
+query = 'provinz=ges&offset=20'
+resp = requests.get(base_url + query)
+data_json = resp.json()
+data_json
+
+[MARKDOWN]
+Takto jsme získali dalších 20 položek. 
+
+Abychom však získali všechny položky, musíme použít cyklus FOR. Budeme postupně po hodnotách dvacet zvyšovat hodnotu parametru offset a rozšiřovat náš list "all_items".
+
+[CODE]
+# seznam offsets v celkové délce našich dat:
+offsets = [n for n in range(0,data_json["total"], 20)]
+offsets[:10]
+
+[CODE]
+%%time
+all_items = []
+base_url = 'https://edh.ub.uni-heidelberg.de/data/api/inschrift/suche?' # zůstává stejné
+for offset in offsets: # pro každý offset
+    query = 'provinz=ges&offset=' + str(offset)
+    resp = requests.get(base_url + query)
+    data_json = resp.json()
+    all_items.extend(data_json["items"])
+
+[CODE]
+# Nyní máme data pro veškeré nápisy z provincie Germania superior
+len(all_items)
+
+[CODE]
+# data si převedeme do objektu typu dataframe
+data_df = pd.DataFrame(all_items)
+data_df.head(5)
+
+[CODE]
+data_df.shape
+
+[MARKDOWN]
+Máme tak dataset o 6832 řádcích a 27 sloupcích.
+
+[CODE]
+kontrola_pruchodu(ntb="api", arg1=query)
+
+[MARKDOWN]
+Každé API se chová trochu odlišně, ale základní logika, včetně pohybu po stránkách, bývá dosti podobná. Vždy je potřeba trochu experimentování.
+
+============================================================
+FILE: gis.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/gis.ipynb)
+
+[MARKDOWN]
+# GIS: Prostorová data ve společenských vědách
+
+## Cvičení
+
+[CODE]
+%%capture
+
+# nyní si naimportujeme některé rozšiřující knihovny, které budeme níže používat (metaforicky řečeno si nasadíme nástavce...)
+!pip install mapclassify
+import requests
+import shutil
+import pandas as pd
+import geopandas as gpd
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+mpl.rcParams["axes.edgecolor"] = "white"
+mpl.rcParams["xtick.color"] = "white"
+mpl.rcParams["xtick.labelcolor"] = "white"
+mpl.rcParams["ytick.color"] = "white"
+mpl.rcParams["ytick.labelcolor"] = "white"
+pd.set_option('display.max_columns', 100)
+
+[CODE]
+# v této buňce si náš virtuální stroj stáhneme první důležitý dataset
+# dataset má přes 100MB, tudíž to pár vteřin potrvá
+!curl https://zenodo.org/records/10146150/files/LIST_v1-1.parquet --output LIST_v1-1.parquet
+
+[CODE]
+# dataset si načteme do naší aktuální "session"
+LIST = gpd.read_parquet("LIST_v1-1.parquet")
+
+[MARKDOWN]
+Když máme dataset načtený, můžeme s ním dále pracovat - aplikovat na něj různé funkce/metody a dále jej upravovat, filtrovat či rozšiřovat o další atributy
+Podívejme se nyní v krátkosti, jak tento dataset vypadá. Oomocí metody `shape` zjístím, jaký má tabulka tvar:
+
+
+
+[CODE]
+LIST.shape
+
+[MARKDOWN]
+První z dvojice čísel udává počet řádků tabulky a druhá počet sloupců tabulky.
+
+další užitečné informace získáme, necháme-li si vypsat prvních 5 řádků pomocí metody `head()`
+
+[CODE]
+LIST.head()
+
+[CODE]
+# pro přehlednost si můžeme nechat vypsat kompletní seznam sloupců:
+LIST.columns
+
+[MARKDOWN]
+pro naše účely jsou mnohé atributy (sloupce) zcela nepotřebné. Pro další analýzy se proto omezíme pouze na několik z nich, a to "LIST_ID", "is_geotemporal", "urban_context", "not_before", "not_after", "Longitude", "Latitude" a "geometry".
+
+[CODE]
+# pomocí dvojitých hranatých závorek vyfiltrujme z datasetu pouze vybrané sloupce
+LIST = LIST[["LIST-ID", "Longitude", "Latitude", "geometry",  "not_before", "not_after", "is_geotemporal"]]
+# podívejme se na náhodný vzorek 10 nápisů:
+LIST.sample(10, random_state=0)
+
+[MARKDOWN]
+Atribut ve sloupci "LIST-ID" obsahuje jednoznačný číselný identifikátor daného nápisu v našem datasetu.
+
+Atributy "Longitude" a "Latitude" vyjadřují zeměpisnou délku a šířku.
+
+Stejná informace je i ve sloupci "geometry". To však není jen tak ledajaký sloupec! Je to sloupec, který z našich dat dělá prostorová data zpracovatelná knihovnou `geopandas`. Data ve sloupci "geometry"  tvoří tzv. [`GeoSeries`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.html#geopandas-geoseries) a celá tabulka je díky nim takzvaný [`GeoDataFrame`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html). Hodnoty zeměpisné šířky a délky jsou zde specificky naformátované a samotné číselné hodnoty předchází slovo "POINT". Definuje se zde, že se jedná o bodové geometrie (formátování jednotlivých prvků vychází ze standardů  python knihovny [Shapely](https://shapely.readthedocs.io/en/stable/manual.html)). Díky těmto vlastnostem lze daná tabulková data bezprostředně použít k nejrůznějším prostorovým operacím, z nichž některé si za okamžik ukážeme.
+
+Sloupce `not_before` a `not_after` vyjadřují časovou informaci. Definují, ze kdy daný nápis pochází. S historickými daty jsme často jako badatelé v situaci, kdy tuto dataci neznáme přesně, jsme schopni pouze vyjádřit informovaný odhad ve formě intervalu. V případě antiky badatelé velké množství objektů datují pouze na úrovni století (např. 4. stol.n.l.). To lze pak číselně vyjádřit intervalem 301-400, jako je tomu v případě posledního nápisu v našem vzorku. V jiných případech daný objekt obsahuje indície, které umožňují mnohem přesnější dataci (například tím, že odkazují k nějaké známé historické události). V takovém případě jsou hodnota `not_before` a `not_after` totožné.
+
+Sloupec "is_geotemporal" obsahuje boolovské hodnoty *Pravda* (True) nebo *Nepravda* (False) odvozené z hodnot ve sloupcích "geometry", "not_before" a "not_after". Hodnota True je zde tehdy, pokud má nápis jak validní nenulovou geometrii, tak informaci o dataci, což v našem datasetu není vždy tak.
+
+Tento sloupec  nyní využijeme k dodatečnému filtrování našich dat, kdy se omezíme pouze na položku, kdy tento atribut má hodnotu True.
+
+[CODE]
+LIST = LIST[LIST["is_geotemporal"]]
+LIST.shape
+
+[MARKDOWN]
+Opět jsme použili metodu shape, abychom se podívali, jaký má náš dataset nyní "tvar". Vidíme, že po filtrování sestává pouze z cca. dvou set tisíc položek a osmi sloupců.
+
+Další důležitá vlastnost našeho `GeoDataFrame` objektu se skrývá za atributem `crs`. Tato tři písmena představují zkratku. Věděli bychom jakou? Zkusme se podívat na výsledek:
+
+[CODE]
+LIST.crs
+
+[MARKDOWN]
+Nyní již můžeme postoupit k první prostorové vizualizaci:
+
+[CODE]
+LIST.plot(color="black", markersize=1)
+
+[MARKDOWN]
+Výsledek není nijak atraktivní a sám o sobě asi i těžko interpretovatelný. V podstatě jsme jen vykreslili do prostoru o něco málo více než 200 000 tisíc bodů. V dalších krocích tohoto cvičení však dostatneme tuto vizualizaci do vizuálně přitažlivější podoby...
+
+V následujícím kroku si načteme další dataset. Tentokrát přímo z webového odkazu:
+
+[CODE]
+provinces = gpd.read_file("https://raw.githubusercontent.com/sdam-au/GI_ETL/master/data/provinces_valid.geojson")
+
+[CODE]
+# opět si nejprve prohlédneme pět prvních řádek atributové tabulky
+provinces.head()
+
+[CODE]
+provinces.shape
+
+[CODE]
+provinces.crs
+
+[MARKDOWN]
+Tento dataset má pouze dva sloupce: "province" a opět "geometry". Vidíme však, že sloupec "geometry" vypadá nyní odlišně. Na první řádce čteme "MULTIPOLYGON" a na dalších řádcích "POLYGON". Naše geometrie zde tedy již nesestávají z bodů ale z ploch. Jak název napovídá, jedná se o provincie, a totiž o provincie Římské říše, její hlavní správní celky, obdoba např. českých krajů (viz [Římské provincie](https://cs.wikipedia.org/wiki/%C5%98%C3%ADmsk%C3%A9_provincie)).
+
+I tento dataset si můžeme velice přímočaře vizualizovat pomocí metody `plot()`, nejprve samostatně a následně společně s naším datasetem nápisů jakožto vrchní vrstvou:
+
+[CODE]
+provinces.plot(color="lightgrey", edgecolor="black")
+
+[CODE]
+point_color = "darkred"
+ax = provinces.plot(color="grey")
+LIST.plot(markersize=1, ax=ax, color=point_color)
+
+[CODE]
+point_color = "darkred"
+ax = provinces.to_crs(3035).plot(color="grey")
+LIST.to_crs(3035).plot(markersize=1, ax=ax, color=point_color)
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením.
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="gis", arg1=point_color)
+
+[MARKDOWN]
+Na obrázku výše vidíme, že oba datasety se týkají téhož území, avšak že bodu v ploše nejsou zdaleka rovnoměrně rozprostřeny a mnohé se nacházejí zcela vně polygonů provincií. To si zaslouží bližší ohledání.
+
+Nejprve pro každý územní celek (provincii) sečteme počet nápisů, které se v ní nacházejí. Využijeme metody `contains()` (určení pro všechny prvky z datasetu nápisů, zda sa nacházejí či nenacházejí uvnitř onoho území (True nebo False)).a `sum()` (sečtení všech prvků s hodnotou True.
+
+
+[CODE]
+%%time
+provinces["LIST_n"] = provinces.geometry.apply(lambda x: x.contains(LIST.geometry).sum())
+provinces.head(5)
+
+[MARKDOWN]
+v datasetu provincií nyní máme informaci o tom, kolik se uvnitř ní nachází nápisů. Provincie jsou ale různě velké, a tudíž samotné číslo nemá příliš velkou výpovědní hodnotu. Spočítejme tedy nyní plochu jednotlivých provincií a vytvořme si nový atribut s názvem "area". Pro tento výpočet si pomocí metody `to_crs` převedeme do metrické projekce EPSG:3035 a získáme plochu v metrech čtverečních. Kilomtery čtvereční získáme, když výsledné hodnoty vydělíme miliónem.
+
+[CODE]
+provinces["area_km2"] = provinces.to_crs(3035).area / 1000000
+provinces.head(5)
+
+[MARKDOWN]
+Pro každou provincii tedy nyní máme a) množtví latinských nápisů, které z ní pocházejí a b) rozsah jejího území v kilometrech čtverečních. Jak získáme hustotu?
+
+[CODE]
+provinces["LIST_density"] = provinces["LIST_n"] / provinces["area_km2"]
+
+[MARKDOWN]
+Data si prohlédneme uspořádaná od položek s největší hodnotou tohoto nového atributu:
+
+[CODE]
+provinces.sort_values("LIST_density", ascending=False, inplace=True)
+provinces.head(5)
+
+[MARKDOWN]
+Vydíme zde výraznou vyjímečnost dat z města Říma (první řádek) a jeho nejbližšího okolí (Lacia, první polygon je současně obsažen v druhém), kde máme řádově vyšší hodnoty, než kdekoli jinde. Proto je z následující vizualizace vyloučíme.
+
+[MARKDOWN]
+Danou hodnotu vyjádříme prostřednictvím baravného odstínu příslušné provincie:
+
+[CODE]
+provinces.plot(column=provinces["LIST_density"], cmap="Reds", edgecolor="black", scheme="Quantiles", k=20)
+
+[MARKDOWN]
+Vidíme, že latinské nápisy se akumulují převážně v západní části Římské říše. To je i území, o němž víme, že na něm dominovala latina. Zatímco ve východní části říše dominovala řečtina.
+
+Proto si nyní stáhneme a načteme ještě jeden dataset. Opět se jedná o dataset nápisů, tentokrát však v řečtině.
+
+
+[CODE]
+# nyní si stáhneme a načteme ještě jeden dataset. Opět se jedná o dataset nápisů, tentokrát však v řečtině-
+!curl https://sciencedata.dk/shared/1774ba52f1271cf2c99693503ef6157a?download --output GIST_v1-1.parquet
+
+[CODE]
+GIST = gpd.read_parquet("GIST_v1-1.parquet")
+GIST.shape
+
+[MARKDOWN]
+Opět se omezíme pouze na vybrané atributy, které budou s výjimkou první (identifikátor) totožné jako v předchozím případě: "PHI_ID", "Longitude", "Latitude", "geometry",  "not_before", "not_after" a  "is_geotemporal". Současně rovnou provedeme filtraci a omezíme se pouze na ty s validní geometrií a datací.
+
+
+[CODE]
+GIST = GIST[["PHI_ID", "Longitude", "Latitude", "geometry", "not_before", "not_after", "is_geotemporal"]]
+GIST = GIST[GIST["is_geotemporal"]]
+GIST.sample(10, random_state=0)
+
+[MARKDOWN]
+Následně si můžeme opět minimalisticky vizualizovat všechny tyto nápisy společně s našimi dalšími dvěma datasety:
+
+[CODE]
+ax = provinces.plot(color="lightgrey")
+LIST.plot(markersize=1, ax=ax, color="darkred", alpha=0.5)
+GIST.plot(markersize=1, ax=ax, color="darkblue", alpha=0.5)
+
+[MARKDOWN]
+Vidíme zde poměrně jasný prostorový vzor. Povšimneme, že řecké nápisy dominují od dnešního Chorvatska směrem dále na východ. Pojďme ale toto pozorování rozpracovat numericky. Spočtěme si počty řeckých nápisů v jednotlivých provinciích a též jejich hustoty.
+
+[MARKDOWN]
+# Samostatný úkol: počet a hustota řeckých nápisů uvnitř jednotlivých provincií:
+
+Povšimli jsme si, že dataset řeckých nápisů `GIST` má obdobnou strukturu jako dataset latinských nápisů `LIST`.
+
+V případě latinských nápisů jsme výše také spočítali jejich počet uvnitř jednotlivých provincií v datasetu `provinces`, když jsme zde aplikovali funkce `contains()` a `sum()`. Dataset `provinces` jsme tak obohatili o nový atribut s názvem `"LIST_n"`. Dále jsme vytvořili atribut `"area_km2"` a nakonec - za využití těchto dvou předchozích atributů - atribut `"LIST_density"`.
+
+Vašim **samostatným úkolem** nyní je obohatit dataset `provinces` o dva další atributy, které budou obsahovat informace o počtech a hustotě řeckých nápisů z datasetu `GIST`. Nazvete je `"GIST_n"` a "`GIST_density`".
+
+(Nápověda: V zásadě jde o to buněk níže zkopírovat a mírně poupravit několik řádek kódu, které jsme použili výše k vytvoření atributů `"LIST_n"` a `"LIST_density"`.)
+
+
+
+[CODE]
+# ÚKOL 1
+# přidejme k datasetu provinces atribut "GIST_n" (za využití kombinace funkcí apply(), contains() a sum() - viz výše v případě latinských nápisů)
+
+[CODE]
+# výsledek si prohlédneme:
+provinces.head(5)
+
+[CODE]
+# ÚKOL 2:
+# přidejme k datasetu provinces atribut "GIST_density" (počty nápisů v atributu "GIST_n" vydělíme hustutou v atributu "area_km2" - viz obdobný výpočet výše v případě latinských nápisů)
+
+[MARKDOWN]
+Pokud jsme postupovali správně, půjdou nám spustit i buňky kódu níže.
+
+[CODE]
+fig, ax1 = plt.subplots()
+provinces.plot(column=provinces["GIST_density"], cmap="Blues", edgecolor="black", scheme="Quantiles", k=20, ax=ax1)
+
+# tentokrát si vytvoříme i legendu
+# budeme postupovat krok po kroku, abychom měli plnou kontrolu
+mpl.rcParams["ytick.labelcolor"] = "black"
+vmin = np.round(provinces["GIST_density"].min(), 2)
+vmax = np.round(provinces["GIST_density"].max(), 2)
+ax1.set_xticklabels([])
+ax1.set_yticklabels([])
+
+sm = plt.cm.ScalarMappable(cmap='Blues', norm=plt.Normalize(vmin=vmin, vmax=vmax))
+cbar = plt.colorbar(sm, ax=ax1, orientation='horizontal', shrink=0.5)
+cbar.set_ticks([vmin, vmax])
+cbar.set_label('GIST density (inscriptions per km$^2$)')
+
+[CODE]
+kontrola_pruchodu(ntb="gis", arg1="kontrola2")
+
+[MARKDOWN]
+Nyní zkombinujeme oba datasety dohromady
+
+[CODE]
+# součet řeckých a latinských nápisů
+provinces["GLIST_n"] = provinces["LIST_n"] + provinces["GIST_n"]
+
+[CODE]
+# hustota součtu řeckých a latinských nápisů
+provinces["GLIST_density"] = provinces["GLIST_n"] / provinces["area_km2"]
+
+[CODE]
+# proporcionální zastoupení latinských nápisů na škále od jedné do nuly (1=pouze latinské, 0=pouze řecké)
+provinces["LIST_proportion"] = provinces["LIST_n"] / provinces["GLIST_n"]
+
+[CODE]
+fig, ax1 = plt.subplots()
+provinces.plot(column=provinces["LIST_proportion"], cmap="seismic", edgecolor="black", ax=ax1)
+ax1.set_yticklabels([])
+ax1.set_xticklabels([])
+
+mpl.rcParams["xtick.labelcolor"] = "black"
+sm = plt.cm.ScalarMappable(cmap='seismic') #, norm=plt.Normalize(vmin=0, vmax=1))
+cbar = plt.colorbar(sm, ax=ax1, orientation='horizontal', shrink=0.5)
+cbar.set_ticks([0, 0.5, 1])
+cbar.set_label('LIST proportion (0=no latin; 1=latin only)')
+
+[MARKDOWN]
+Tento obrázek si nyní uložíme.
+
+[CODE]
+fig.savefig("provinces_list-proportion.png")
+#files.download("provinces_list-proportion.png")
+
+[MARKDOWN]
+# Rozšiřující analýza: časový rozměr
+
+[CODE]
+%%capture
+# doinstalujeme si knihovnu pro práci s "časovou nejistotou" v historických datech: https://pypi.org/project/tempun/
+!pip install tempun
+import tempun
+
+[CODE]
+# datace jednotlivých nápisů jsou v tuto chvíli vyjádřeny interval, s touto formou dat se rozložení dat v čase špatně analyzuje
+# datační interval využijeme nyní k tomu, že si každý nápis datujeme do jednoho konkrétního roku ohraničeného tímto intervalem
+# POZOR: provedení tohoto příkazu trvá několik minut
+def get_one_random_year(row):
+  year = tempun.model_date(row["not_before"], row["not_after"], size=2)[0]
+  return year
+GIST["year"] = GIST.apply(lambda row: get_one_random_year(row), axis=1)
+LIST["year"] = LIST.apply(lambda row: get_one_random_year(row), axis=1)
+
+[CODE]
+# vytvoříme histogram distribuce nápisů v čase
+fig, ax = plt.subplots()
+GIST["year"].hist(color="darkred", bins=range(-800,600,50), histtype='step', ax=ax)
+LIST["year"].hist(color="darkblue", bins=range(-800,600,50), histtype='step', ax=ax)
+ax.set_ylabel("N of inscriptions")
+ax.set_xlabel("year")
+
+[CODE]
+# vytvoříme mapu všech nápisů datovaných před naším letopočtem (nahoře) a našeho letopočtu (dole)
+fig, [ax1,ax2] = plt.subplots(2,1, dpi=300, tight_layout=True)
+
+provinces.plot(color="lightgrey", ax=ax1)
+GIST[GIST["year"]<=0].plot(color="darkblue", alpha=0.5, markersize=1, ax=ax1)
+LIST[LIST["year"]<=0].plot(color="darkred", alpha=0.5, markersize=1, ax=ax1)
+ax1.set_xlim(-10,50)
+ax1.set_yticklabels([])
+ax1.set_xticklabels([])
+ax1.set_title("All inscriptions BCE")
+
+provinces.plot(color="lightgrey", ax=ax2)
+GIST[GIST["year"]>0].plot(color="darkblue", markersize=1,alpha=0.5, ax=ax2)
+LIST[LIST["year"]>0].plot(color="darkred", markersize=1, alpha=0.5, ax=ax2)
+ax2.set_xlim(-10,50)
+ax2.set_yticklabels([])
+ax2.set_xticklabels([])
+ax2.set_title("All inscriptions CE")
+
+
+[CODE]
+# fig.savefig("GIST+LIST_BCvsCE.png")
+
+============================================================
+FILE: http.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/http.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+
+[MARKDOWN]
+# HTTP: Dotazování webu
+
+### Úvod a cíle kapitoly
+
+V této kapitole se podíváme na získání dat z různých internetových platforem.  Webový prohlížeč je jen jeden ze způsobů, jak využívat internet. Mnohé aplikace, které máme v našich počítačích i chytrých telefonech, získávají z internetu data, aniž by webový prohlížeč jakkoli vstupoval do hry. Python a Jupyter notebooky mohou být využitý jako takováto aplikace. K mnohým datům, která jsou dostupná na internetu, se tak lze dostat přímo z našeho Python prostředí, aniž bychom museli data nejprve stahovat a poté do Pythonu načítat ve formě souborů.
+
+Tato data se z webu získávají typicky pomocí protokolu HTTP (Hypertext Transfer Protocol): Aplikace vznese dotaz v podobě konkrétní URL adresy, na který webový server, na který URL adresa směřuje, podá odpověď ve formě dat. Tento proces se vlastně děje i na pozadí našeho prohlížeče: Přes zadanou URL adresu doazujeme určitý webový server, který našemu prohlížeči jako odpověď vrátí tzv. zdrojový kód stránky ve formátu HTML. Vyzkoušejme si to nyní na několika příkladech.
+
+
+[MARKDOWN]
+Jako první příklad nám mohou posloužit webové stránky hesel ze Slovníku českých filozofů dostupná z tohoto rozcestníku: https://filozofie.phil.muni.cz/vyzkum/publikace/scf/abecedni-seznam
+
+[CODE]
+# naimportujeme si několik knihoven
+import requests # python knihovna pro vznášení HTTP dotazů
+from bs4 import BeautifulSoup # python knihovna pro práci s daty ve formátu html či xml
+import pandas as pd
+
+[CODE]
+# url adresa hesla věnovaného Jiřímu Fialovi:
+url = "https://www.phil.muni.cz/fil/scf/komplet/fiala.html"
+
+[CODE]
+# na tuto webovou adresu nyní vzneseme dotaz pomocí knihovny requests
+# odpověď si uložíme do proměnné `resp`:
+resp = requests.get(url)
+
+[CODE]
+# odpověď si vypíšeme
+resp
+
+[MARKDOWN]
+Pokud máme funkční připojení k internetu a a validní URL adresu, odpověď by měla být: "<Response [200]>".
+Avšak v případě, že jsme například zvolili neexistující URL, odpověď bude jiná. Vyzkoušejme:
+
+[CODE]
+url = "https://www.phil.muni.cz/fil/scf/komplet/plato.html"
+resp_test = requests.get(url)
+resp_test
+
+[MARKDOWN]
+Vraťme se však zpět k naší odpovědi (objektu `resp`) z funkční URL adresy. Tento objekt totiž v sobě nese mnohem více, než jen informaci o tom, zda jsme obdrželi validní odpověď. Tato další data se skrývají zejména pod atributem `.text` (či `.content`)
+
+[CODE]
+url = "https://www.phil.muni.cz/fil/scf/komplet/fiala.html"
+resp = requests.get(url)
+resp.text
+
+[MARKDOWN]
+Co zde vidíme? Jedná se o zdrojový kód příslušné webové stránk. Přesně z těchto dat náš prohlížeč vychází, když nám zobrazuje vybranou webovou stránku. V tomto kroku je daný kód zapouzdřený jako proměnná typu string. Všimněme si, že zde máme problém se znakovou sadou: např. "pøekladù" namísto "překladů". Tento nedostatek však rychle napravíme a na text se podíváma ještě jednou:
+
+
+[CODE]
+resp.encoding = 'windows-1250' # volba znakové sady
+resp.text
+
+[MARKDOWN]
+Nyní je již vše správně. Tato data v sobě však nesou více než prostý text - jsou ve formátu HTML, sestávající z mnoha tagů, které určují kde začíná a končí řádka, vyznačují další hypertextové odkazy apod. Nyní proto použijeme knihovnu `BeautifulSoup`, abychom tento text interpretovali (parsovali) jako HTML kód, ve kterém se lze pohybovat jako v jakémsi stromu:
+
+[CODE]
+soup = BeautifulSoup(resp.text, "html.parser")
+print(soup.prettify())
+
+[MARKDOWN]
+Objekt soup v sobě skrývá navigovatelnou stromovou strukturu celé html stránky. Můžeme zde nyní přistupovat k datům z jednotlivých tagů případně je i měnit. Názorné příklady jsou k dispozici v dokumentaci knihovny v sekci "Quick start". 
+
+Například pod tagem `title` se skrývá název příslušné webové stránky:
+
+[CODE]
+soup.title
+
+[MARKDOWN]
+Pokud nás zajímá pouze textový obsah daného tagu, příkaz ještě doplníme o atribut `string` nebo metodu `get_text()`
+
+[CODE]
+soup.title.string
+
+[MARKDOWN]
+Po troše experimentování a prozkoumávání můžeme například zjistit, že datum narození a úmrtí se v dané struktuře nachází zde:
+
+[CODE]
+soup.body.find_all("p")[2].find_all("strong")[0].string
+
+[CODE]
+soup.body.find_all("p")[2].find_all("strong")[1].string
+
+
+[MARKDOWN]
+To jsou velice zajímavá a cenná metadata. Je stejná struktura zachována i na dalších stránkách ve slovníku? To nyní prověříme.
+
+[CODE]
+url = "https://www.phil.muni.cz/fil/scf/komplet/machjs.html"
+resp = requests.get(url)
+resp.encoding = 'windows-1250'
+soup = BeautifulSoup(resp.text, "html.parser")
+soup.title.string # vypíšeme název html
+
+[CODE]
+soup.body.find_all("p")[2].find_all("strong")[0].string # pokusíme se nalézt datum a místo narození
+
+[CODE]
+soup.body.find_all("p")[2].find_all("strong")[1].string # pokusíme se nalézt datum a místo úmrtí
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="http", arg1=url)
+
+[MARKDOWN]
+Práce s mnoha webovými stránkami najednou
+
+[MARKDOWN]
+Webové stránky Slovníku českých filozofů mají abecední rozcestník: https://filozofie.phil.muni.cz/vyzkum/publikace/scf/abecedni-seznam. Při ohledání zdrojového kódu této stránky se ukazuje, že obsahuje URL adresy všech hesel ve slovníku. Srdce datového analytika zaplesá: Zdrojový kód obstahujícící URL adresy všech hesel ve slovníku totiž znamená, že můžeme pomocí Pythonu jednu po druhé procházet všechny dané webové stránky a získat z nich data, která nás zajímají, například informace o datech a místech narození a úmrtí všech zahrnutých osobností.
+
+Nejprve budeme postupovat stejně jako výše: Pomocí `requests` získáme objekt `resp`, jehož datový obsah v podobě zdrojového kódu příslušné webové adresy naparsujeme pomocí `BeautifulSoup()` do navigovatelného stromu. 
+
+[CODE]
+url = "https://filozofie.phil.muni.cz/vyzkum/publikace/scf/abecedni-seznam"
+resp = requests.get(url)
+soup = BeautifulSoup(resp.text, "html.parser")
+
+[MARKDOWN]
+Nyní pomocí cyklu FOR projedeme všechny tagy `a` (stanardní tag pro hypertextový odkaz). Pokud se v hodnotě atributu "href" tohoto tagu nachází URL adresa začínající stejně jako URL adresy jednotlivých hesel ve slovníků, extrahujeme tuto adresu a přidáme ji na seznam `filtered_hrefs`. (Ve zdrojovém kódu se může vyskytovat mnoho dalších URL adres, odkazujících např. kamsi na web Masarykovy univerzity, ty nás ale nyní nezajímají, proto tato podmínka.)
+
+[CODE]
+filtered_hrefs = []
+
+for a_tag in soup.find_all('a'):
+    href = a_tag.get('href')    # Extract 'href' attribute value.
+    if href and href.startswith('http://www.phil.muni.cz/fil/scf/komplet/'):   # condition
+        filtered_hrefs.append(href)
+
+[MARKDOWN]
+vypišme si prvních 10 URL adres:
+
+[CODE]
+filtered_hrefs[:10]
+
+[MARKDOWN]
+Nyní vytvoříme cyklus FOR, v rámci kterého získáme zdrojový kód HTML stránky každé z těchto URL adres pomocí `requests`, zpracujeme jej pomocí `BeautifulSoup` a pokusíme se získat data se jmény jednotlivých filozofů a o místech a datech narození a úmrtí. 
+
+[CODE]
+failed = []
+slovnik_data = []
+for url in filtered_hrefs[:10]:
+    try:
+        resp = requests.get(url)
+        resp.encoding = 'windows-1250'
+        soup = BeautifulSoup(resp.text, "html.parser")
+        title = soup.title.string
+        birth = soup.body.find_all("p")[2].find_all("strong")[0].string
+        try:
+            death = soup.body.find_all("p")[2].find_all("strong")[1].string
+        except:
+            death = None
+        if "*" not in str(birth):
+            birth = None
+        if "†" not in str(death):
+            death = None
+        slovnik_data.append({"url" : url, "name" : title, "birth" : birth, "death" : death})
+    except:
+        failed.append(url)
+
+[MARKDOWN]
+Z dat, která jsme takto získali, vytvoříme velice snadno tabulku, respektivě objekt typu `pandas.DataFrame`:
+
+[CODE]
+slovnik_df = pd.DataFrame(slovnik_data) # vytvoříme dataframe
+slovnik_df = slovnik_df.replace(to_replace=r'\r\n', value='', regex=True) # drobné čičtění 
+slovnik_df # dataframe si vypíšeme
+
+[MARKDOWN]
+Vidíme relativně pěkně naformátovanou tabulku se čtyřmi sloupci. Některé hodnoty jsou prázdné (`NaN`, případně `None`), například ve sloupci "death" v případě, že se jedná o žijícího autora. V jiných případech se zdá, že některá hesla jsou naformátovaná odlišně.
+
+ Z praktických důvodů jsme se však omezili pouze na 10 prvních hesel. Dropnou úpravou (odstraněním "[:10"]) však lze skript snadno přenastavit tak, aby se aplikoval na všechny URL adresy na seznamu. Tomu se však nyní společně vyhneme, abychom příslušný webový server zbytečně nepřetěžovali tisíci HTTP dotazy. Na místo toho si tato kompletní data načteme z místa, kam jsem je dopředu uložil a vypíšeme si první 20 položek:
+
+[CODE]
+slovnik_df.to_csv("slovnik_df.csv", index=False)
+
+[CODE]
+slovnik_df = pd.read_csv("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/slovnik_df.csv")
+slovnik_df.head(20)
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+kontrola_pruchodu(ntb="http", arg1="http2")
+
+[MARKDOWN]
+V některé z dalších kapitol se k těmto datům vrátíme a budeme pracovat se sloupci "birth" a "death", které obsahují cenné časoprostorové informace. Tyto informace nyní nejsou v podobě vhodné pro kvantitativní analýzu. My si však ukážeme, jak je přetavit do podoby, aby pro tuto analýzu byla tato dato vhodná.  
+
+[MARKDOWN]
+Je nasnadě, že podobný přístup lze aplikovat na mnohé webové stránky, a to zvláště tehdy, kdy se jedná o velké množství podobně naformátovaných stránek. Často to je jediný přístup, jak se k podobným datům dostat. Této metodě se také říká "web scraping" a je někdy problematická z etického hlediska. Některé webové stránky výslovně zakazují, aby data, která se na nich nacházejí, byla dolována podobným způsobem. Někdy je to motivováno obavou z přetížení příslušného webového serveru mnoha dotazy, jindy spíše s ohledem na autorství. Často se však zdá, že tvůrce daných webových stránek vůbec nenapadlo, že by jejich dat někdo mohl chtít využívat tímto způsobem.
+
+============================================================
+FILE: jupyter.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/jupyter.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+
+[MARKDOWN]
+# Jupyter: Stručný úvod
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+
+[MARKDOWN]
+V této kapitole si osvětlíme samotné základy toho, co je to Jupyter Notebook, jak s ním pracovat, a k čemu jej lze využít.
+Pokud čtete tento text, znamená to, že soubor jste úspěšně otevřeli, k čemuž jste mohli použít širokou paletu online i offline aplikací. Některé z těchto aplikací vám umožňují si tento 
+soubor pouze pasivně pročíst, podobně jako když otevřete webovou stránku či soubor ve formátu PDF. Tak je tomu například v případě, že jste jej otevřeli přímo na webové stránce GitHub. 
+Jiná situace nastává, pokud jste jej otevřeli za využití aplikace, která  si dokáže poradit s příkazy v programovacím jazyce Python, které se nacházejí níže. 
+Typicky se jedná o nějakou implementaci takzvaného Jupyter Serveru, který zajišťuje komunikaci mezi daným souborem a konkrétní instancí programovacího jazyka Python. 
+Takové aplikace můžeme nalézt buď na webu (např. [Google Colaboratory](https://colab.google), [CoCalc](https://cocalc.com), nebo [MyBinder](https://mybinder.org)), nebo je můžeme mít nainstalovány lokálně na svém osobním počítači, a to buď samostatně (viz [JupyterLab](https://jupyter.org)) nebo jako součást komplexnější aplikace pro profesiónální programátory či datové vědce (tzv. IDE=Interactive Development Environment, jako je [Visual Studio Code](https://code.visualstudio.com) nebo [DataSpell](https://www.jetbrains.com/dataspell/)).
+
+Budeme přepokladát, že jste tento soubor otevřeli za využití jednoho velice užitečného nástroje od společnosti Google, a to Google Colaboratory neboli GoogleColab (popis [zde](https://colab.research.google.com/notebooks/welcome.ipynb)). Otevřením souboru notebooku ve vašem prohlížeči na platformě GoogleColab došlo automaticky k navázání komunikace mezi tímto souborem a serverem provozovaným společností Google, který dokáže níže obsažené příkazy v programovacím jazyce Python zpracovat.
+
+Abyste s tímto souborem mohli sami aktivně pracovat, je třeba si nejprve v rámci vašeho Google účtu vytvořit jeho vlastní kopii (nabídka "File" -> "Save a copy in drive"). Je však potřeba být přihlášený k nějakému google účtu.
+
+[MARKDOWN]
+Jupyter notebook má dvojí obsah:
+
+1.   Buňky ("cells") průvodního textu, jako je tento, které nám především umožňují  zevrubně dokumentovat náš postup;
+2.   Buňky skriptu, které obsahující příkazy pro spuštění v samotném Pythonu (u kterých se nachází ikona "play").
+
+Hranice mezi buňkami ukazuje rámeček, který se kolem buňky objeví, když na ni klikneme.
+
+Otevřením GoogleColab navážeme komunikaci se serverem, který nám umožňuje buňku po buňce interpretovat náš skript. Buňky skriptu takto spouštíme buď za využití ikonky "play" vlevo či za využití klávesové zkratky Shift+Enter.  Máme-li kód uvnitř buňky správně, Python vykoná, co po něm žádáme, a ihned pod buňkou se nám vypíše např. výsledek dotazovaného výpočtu. Máme-li ve skriptu syntaktickou chybu, jsme na to bezprostředně upozorněni chybovou hláškou.
+
+Dokud jupyter notebook nezavřeme či neztratíme spojení ze serverem, můžeme v rámci skriptu využívat proměnné a funkce, které jsme si v rámci jupyter notebooku nadefinovali a spustili v předchozích buňkách. Při novém otevření jupyter notebooku ale musíme buňky opět spustit jednu po druhé.
+
+Abychom skript měli co nejsrozumitelnější,  k jednotlivým příkazům si můžeme za znamínko "#" dopisovat dovysvětlující komentáře. Python ví, že co se v rámci řádky nachází za znamínkem křížku, se jej netýká. V tomto jupyter notebooku  budeme níže spíše využívat takovéto komentáře přímo uvnitř buněk skriptu.
+
+Pokud jste dočetli instrukce až sem, cítíte se zahleceni a zmateni a máte dojem, že ne všemu rozumíte, určitě nezoufejte. Zkuste pouze sledovat instrukce níže a když nevíte, stiskněte klávesovou zkratku "Shift+Enter", a v případě chyby se vraťte o něco nazpět.
+
+[MARKDOWN]
+Začněme tím, že si ukážeme pár jednoduchých  na sebe navazujících buněk skriptu. První buňka skriptu zavádí dvě nové proměnné, které si nazveme např. "prvni_ciselna_promenna" a "druha_ciselna_promena" (Název proměnných je zvolen tak, aby neobsahoval mezery ani diakritiku, které by Python mátly, a aby nám v budoucnu napověděl, co se za proměnnými skrývá. Obvykle ale volíme kratší názvy proměnných než v tomto příkladu.). V Pythonu si proměnné zavádíme jednoduše tak, že jim  pomocí rovnítka přiřadíme určitou hodnotu: to, co je od rovnítka napravo, se spuštěním příkazu stává hodnotou proměnné, jejíž název se nachází od rovnítka nalevo.
+
+Jak už bylo uvedeno výšo, skript uvnitř buňky spustíme tak, že do ní přemístíme kurzor, a buď stiskneme ikonu "play", nebo použijeme klávesovou zkratku Shift+Enter.
+
+
+[MARKDOWN]
+## Cvičení
+
+[CODE]
+# toto je naše první buňka skriptu
+# a tento text je náš pomocný komentář
+# na následujících dvou řádcích se nachází příkazy pro zavedení a přiřazení hodnot našim dvěma proměnným
+prvni_ciselna_promenna = 17
+druha_ciselna_promenna = 20
+# k provedení příkazů je potřeba tuto buňku spustit (viz výše)
+
+[CODE]
+# toto je naše druhá buňka skriptu.
+# zde můžeme využít proměnných nadefinovaných výše (pokud jsme buňku výše spustili)
+# můžeme např. vytvořit třetí proměnnou, jejímž obsahem učiníme součet našich prvních dvou proměnných
+soucet_promennych = prvni_ciselna_promenna + druha_ciselna_promenna
+
+[CODE]
+# obsah nasich tří proměnných si můžeme kdykoliv vypsat
+# k tomu nám poslouží funkce "print()"
+# vypišme si tedy náš součet:
+print(soucet_promennych)
+
+[MARKDOWN]
+Se třemi buňkami skriptu výše si můžeme různě pohrát. Můžeme se např. vrátit k první buňce, změnit hodnoty proměnných a spustit buňky skriptu jednu po druhé znovu. Otevírá se zde jedna z možností jak velice efektivně využít Python např. jako jakousi pokročilou kalkulačku.
+
+[CODE]
+# # prázdná buňka kódu pro naše pokusy s doposud použitámi proměnnými.
+
+
+[MARKDOWN]
+Python ale není vhodný jen pro práci s čísly. Můžeme např. pracovat i s texty, kdy si proměnné plníme slovy, větami či celými dokumenty, a následně na tyto proměnné aplikujeme nejrůznější funkce. To si ukážeme ve dvou buňkách níže.
+
+[CODE]
+# příkaz níže přiřazuje proměnné obsah v podobě textu. Jedná se tedy o proměnnou typu "string".
+textova_promenna = "Tento text je textová proměnná. Lze například počítat, kolik slov daná proměnná obsahuje, nebo kolikrát se v ní objevuje nějaké slovo, například slovo text."
+
+[CODE]
+# funkce "len()" v kombinaci s funkcí ".split()" umožňují spočítat, kolik má naše proměnná slov
+# tuto hodnotu přiřadíme proměnné "pocet_slov"
+pocet_slov = len(textova_promenna.split())
+# tuto proměnnou si vypíšeme:
+print(pocet_slov)
+
+[CODE]
+# funkce "count()" nám umožňuje spočít, kolikrát se zde objevuje určitý sled znaků
+# výslednou hodnotu si tentokrát necháme vypsat hned pod buňku
+print(textova_promenna.count("slov"))
+
+[MARKDOWN]
+Tento typ interkativní práce s proměnnými, jejich hodnotama a manipulacemi s nimi pomocí nejrůznějších funkcí budeme budeme nadále rozvíjet ve všech následujících jupyter noteboocích.
+
+[CODE]
+# předpřipravné prázdná buňka kódu pro naše další experimenty.
+
+
+============================================================
+FILE: nlp.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/nlp.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master).
+
+# NLP: Zpracování přirozeného jazyka
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+Cílem tohoto cvičení je provést základní kvantitativní textovou analýzu vybraného dokumentu z **Archivu Jana Patočky**. Bohužel webová verze archivu, s online přístupnými Patočkovými texty, je v tuto chvíli (tj. jaro 2026) nedostupná (původní odkaz [zde](https://archiv.janpatocka.cz/items/browse?tags=fulltext)). Proto v tomto roce využijeme dokumenty zálohované z minulých let.
+
+[MARKDOWN]
+## Cvičení
+
+[MARKDOWN]
+V tomto cvičení je konfigurace potřebných knihoven o něco komplexnější.
+
+
+[CODE]
+%%capture
+!pip install stanza
+import stanza
+stanza.download("cs")
+czech_pipeline = stanza.Pipeline("cs")
+import requests
+from urllib.request import urlopen # pro práci w webovými adresami
+from bs4 import BeautifulSoup # pro práci s webovými stránkami ve formátu html
+import pandas as pd # pro práci s tabulkami ve formátu dataframe
+import nltk # modul pro práci s textovými daty
+from sklearn.feature_extraction.text import CountVectorizer
+nltk.download('punkt')
+import matplotlib.pyplot as plt # modul pro vytváření grafů
+import numpy as np # modul pro pokročilejší matematické operace
+import re
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics.pairwise import cosine_similarity
+
+[MARKDOWN]
+Nyní si načteme tabulku textů připravenou z minulých let.
+
+[CODE]
+patocka_all_df = pd.read_parquet("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/refs/heads/master/data/patocka_all_raw_df.parquet")
+patocka_all_df = patocka_all_df[patocka_all_df["rawtext"].notnull()] # omezíme se pouze na řádky s dostupnými textovými daty
+patocka_all_df.head(10)
+
+[MARKDOWN]
+Naším prvním úkolem bude si z této tabulky vybrat jeden konkrétní dokument dle našeho vkusu. Tabulku můžeme různým způsobem procházet, např. si z ní zobrazit náhodný vzorek 10 dokumentů pomocí `patocka_all_df.sample(10)`.
+
+Když si konkrétní dokument vybereme, poznamenáme si jeho ID, které vidíme ve sloupci úplně vlevo ("ajp_id").
+
+Toto ID je tím jediným, čím se v archivu odlišují URL adresy jednotlivých dokumentů, ale to jsou nyní bohužel mimo provoz. Přesto si můžeme adresu zobrazit.
+
+[MARKDOWN]
+**SAMOSTATNÝ ÚKOL**: v následující buňce vyplňte ajp_id vámi zvoleného dokumentu.
+
+[CODE]
+doc_id =      # před symbolem hashtagu doplňte id dokumentu z tabulky patocka_all_df
+url = "https://archiv.janpatocka.cz/items/show/" + str(doc_id)
+url
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením.
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="nlp", arg1=url)
+
+[MARKDOWN]
+Nyní si vybereme z tabulky data odpovídající námi zvolenému dokumentu.
+
+[CODE]
+doc_df = patocka_all_df.loc[doc_id]
+doc_df
+
+[CODE]
+# můžeme odtud vyvolat název dokumentu:
+doc_df["title"]
+
+[CODE]
+# ...ale zejména jeho text
+text_dokumentu = doc_df["rawtext"]
+# ten si nyní vyobrazíme:
+print(text_dokumentu)
+
+[CODE]
+# dokument jako list slov získáme pomocí funkce "split()"
+# uložíme si ho takto do nové proměnné "string_list"
+string_list = text_dokumentu.split()
+# prvních 20 prvků tohoto listu si nyní vypíšeme:
+string_list[:20]
+
+[CODE]
+### pomocí funkce "len()" spočítáme délku tohoto listu slov:
+len(string_list)
+
+[MARKDOWN]
+### Lematizace a postagging
+
+S textem článku, tak jak se nyní nachází v proměnné "text_clanku", bychom se ale při kvantitativní textové analýze stále příliš daleko nedostali. Čeština je totiž morfologicky velice bohatý jazyk. Chceme-li např. spočítat kolikrát se v textu objevuje sloveso "mít", s textem v aktuální podobě se příliš daleko nedstaneme. Zde potřebujeme na naše textová data aplikovat dvě další procedury:
+
+
+1.   lemmatizace, tj. převedení slov z textu do jejich základních tvarů (slovesa do infinitivu, podstatná jména do 1.pádu singuláru apod.)
+2.   POS-tagging ("part-of-speech tags"),  tj. určení slovních druhů a mluvnických kategorií
+
+Aplikace těchto procedur nám umožní získat data z hlediska kvantitativní textové analýzy výrazně zajímavější.
+
+V případě češtiny se můžeme v tomto případě opřít o model pro jazykový model pro zpracování češtiny vyvinutý pro knihovnu [stanza](https://stanfordnlp.github.io/stanza/), konkrétně [stanza-cs](https://huggingface.co/stanfordnlp/stanza-cs).
+
+
+[CODE]
+sent = "Česká republika je velmi sebevědomý stát, který dokáže stát na vlastních nohách."
+doc = czech_pipeline(sent)
+doc
+
+[CODE]
+# jiný příklad ukáže limity tohoto modelu:
+sent = "Ptáci seděli na smrku a jedli."
+doc = czech_pipeline(sent)
+[t.lemma for t in doc.sentences[0].words]
+
+[CODE]
+# nyní aplikujeme na celý Patočkův dokument.
+# vytvoříme morfoligicky zpracovanou verzi našeho textu a konvenčně si ji uložíme do proměnně `doc`.
+doc = czech_pipeline(text_dokumentu)
+
+[MARKDOWN]
+Tímto jsme vytvořili morfoligicky zpracovanou verzi našeho textu a konvenčně si ji uložili do proměnně `doc`. Tento objekt nyní neobsahuje pouze syrový text, ale také text rozdělený do vět, každou větu na jednotlivá slova a každému slovo je automaticky přiřazeno jeho *lemma*, morfologické určení a některé další atributy. Na tuto datovou strukturou se můžeme nyní pracovat např. následujícím způsobem:
+
+[CODE]
+data = []
+for i, sentence in enumerate(doc.sentences):
+  for token in sentence.words:
+    data.append({
+      'sent_n' : i,
+      'text': token.text,
+      'lemma': token.lemma,
+      'upos': token.upos,
+      'xpos': token.xpos
+    })
+data_df = pd.DataFrame(data)
+data_df[30:40]
+
+[MARKDOWN]
+Obdobně můžeme vybrat z vět pouze lemmata slov vybraných slovních druhů:
+
+[CODE]
+lemmatized_sentences = []
+for sent in doc.sentences:
+  sentence_lemmata = []
+  for token in sent.words:
+    if token.upos in ["PROPN", "NOUN", "VERB", "ADJ"]:
+      sentence_lemmata.append(token.lemma)
+  lemmatized_sentences.append(sentence_lemmata)
+
+[CODE]
+lemmatized_sentences[:3]
+
+[MARKDOWN]
+V této podobě může být již vcelku zajímavé podívat se na frekvence výskytů slov, resp. jejich lematizovaných tvarů. K tomu použijeme funkce z modulu "nltk".
+
+[CODE]
+# nejprve si z naší filtrované tabulky vyxtrahujeme lemmata samotná
+lemmata = [l for s in lemmatized_sentences for l in s]
+# pro každý jednotlivý výraz necháme spočítat jeho počet výskytů
+lemmata_freq = nltk.FreqDist(lemmata)
+# vybereme např. 10 nejfrekventovanějších slov (rozumějme lemmatizovaných substantiv, adjektiv a sloves)
+lemmata_most_freq = lemmata_freq.most_common(10)
+print(lemmata_most_freq)
+
+[MARKDOWN]
+Nyní si tato data vizualizujeme.
+
+[CODE]
+# kvůli horizontálnímu zobrazení prohodíme pořadí na našem listu
+lemmata_mostfreq = lemmata_most_freq
+lemmata_mostfreq.reverse()
+
+# pro potřeby grafu přiřadíme hodnoty jednotlivým osám
+height = [tup[1] for tup in lemmata_mostfreq]
+bars = [tup[0] for tup in lemmata_mostfreq]
+y_pos = np.arange(len(bars))
+
+plt.barh(y_pos, height)
+# graf si pojmenujeme a osu také
+plt.yticks(y_pos, bars)
+plt.xlabel('Frekvence výskytů')
+plt.title('Frekvence výskytů nejčastějších slov')
+# graf si zobrazíme
+plt.show()
+
+[MARKDOWN]
+Přehled nejfrekventovanějších slov jistě představuje cennou informaci o obsahu zkoumaného textu či souboru textů. Neříká však nic o tom, jakým způsobem jsou zde příslušná slova použita. K tomu potřebujeme zaprvé a především informaci o tom, která slova se spolu a jak často spoluvyskytují. Tuto informaci získáme tak, že zkonstruujeme tzv. **kookurenční matici**.
+
+
+
+[CODE]
+vocabulary = [tup[0] for tup in lemmata_freq.most_common(100)]
+vect = CountVectorizer(vocabulary=vocabulary, lowercase=False)
+X = vect.fit_transform([" ".join(sent) for sent in lemmatized_sentences])
+Xc = (X.T * X)  # This is the matrix manipulation step
+cooccurrence_matrix_df = pd.DataFrame(Xc.todense(), index=vocabulary, columns=vocabulary)
+cooccurrence_matrix_df.head()
+
+[CODE]
+kontrola_pruchodu(ntb="nlp", arg1=vocabulary[:10])
+
+[MARKDOWN]
+Pokud jsme se dostali až jsem, hlavní část našeho úkolu byla splněna. Máme-li však čas a chuť, můžeme pokračovat dále.
+
+[MARKDOWN]
+> **Zde končí povinná část cvičení.**
+
+[MARKDOWN]
+## Rozšiřující analýza: Analýza všech děl z Archivu Jana Patočky
+
+Vraťme se nyní k tabulce všech děl v příslušném archivu:
+
+[CODE]
+patocka_all_df.head(5)
+
+[MARKDOWN]
+Nyní můžeme veškerá textová data ve sloupci `rawtext` emmatizovat pomocí funkce níže. Tato procedura může být v případě větších korpusů relativně výpočetně náročná, proto ji zde budeme aplikovat jen obezřetně.
+
+Musíme počítat s výpočtem trvacjícím několika minut. V případě časové tísně tento krok přeskočíme a posuneme se k buňce níže, kde se rovnou načtou již předzpracovaná data.
+
+[CODE]
+def get_lemmatized_sents(rawtext):
+  try:
+    doc = czech_pipeline(rawtext)
+    lemmatized_sentences = []
+    for sent in doc.sentences:
+        sentence_lemmata = []
+        for token in sent.words:
+            if token.upos in ["PROPN", "NOUN", "VERB", "ADJ"]:
+                sentence_lemmata.append(token.lemma)
+        lemmatized_sentences.append(sentence_lemmata)
+    return lemmatized_sentences
+  except:
+    return []
+
+[CODE]
+patocka_all_df["lemmatized_sents"] = patocka_all_df["rawtext"].apply(get_lemmatized_sents)
+
+[CODE]
+# v případě přeskočení předchozí buňky je potřeba v této buňce odmazat hashtag (#) na začátku následující řádky:
+# patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+# patocka_all_df = patocka_all_df[patocka_all_df["rawtext"].notnull()] # omezíme se pouze na řádky s dostupnými textovými daty
+patocka_all_df.head(5)
+
+[CODE]
+patocka_all_df.shape
+
+[CODE]
+# získaná data si vyexportujeme do samosatné proměnné v podobě listu lematizovaných vět a ten následně také do listu lematizovaných slov.
+all_sents = [sent for doc in patocka_all_df["lemmatized_sents"] for sent in doc]
+docs = [" ".join(sent) for sent in all_sents]
+lemmata_flat = [t for s in all_sents for t in s]
+# z listu slov spočítáme frekvence
+lemmata_freqs = nltk.FreqDist(lemmata_flat).most_common()
+vocabulary = [tup[0] for tup in lemmata_freqs][:500]
+lemmata_freqs[:10]
+
+[CODE]
+# z těchto dat opět vytvoříme matici spoluvýskytů
+vect = CountVectorizer(vocabulary=vocabulary, lowercase=False)
+X = vect.fit_transform(docs)
+Xc = (X.T * X)  # This is the matrix manipulation step
+cooccurrence_matrix_df = pd.DataFrame(Xc.todense(), index=vocabulary, columns=vocabulary)
+cooccurrence_matrix_df.head()
+
+[CODE]
+# pro efektivitu analýz zredukujeme dimenzionalitu
+svd = TruncatedSVD(n_components=100)  # choose the number of components
+X_reduced = svd.fit_transform(Xc)
+
+[CODE]
+embeddings_df = pd.DataFrame(X_reduced, index=vocabulary)
+
+def most_similar(word, n=10):
+    if word not in embeddings_df.index:
+        print(f"Slovo '{word}' není ve slovníku.")
+        return pd.DataFrame()
+
+    word_vector = embeddings_df.loc[[word]]
+    similarities = cosine_similarity(word_vector, embeddings_df)[0]
+
+    result = pd.DataFrame({
+        "word": embeddings_df.index,
+        "similarity": similarities
+    })
+
+    result = result[result["word"] != word]
+    return result.sort_values("similarity", ascending=False).head(n)
+
+most_similar("svět")
+
+============================================================
+FILE: nlp_backup.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/nlp.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# NLP: Zpracování přirozeného jazyka
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+Cílem tohoto cvičení je provést základní kvantitativní textovou analýzu některého digitalizovaného dokumentu z **Archivu Jana Patočky** ([AJP](https://archiv.janpatocka.cz/items/browse?tags=fulltext)). Omezíme se však pouze na dokumenty, u kterých je dostupný digitální přepis (tzv. fulltext). Tj. URL adresa, kterou hledáme, je adresa jakéhokoliv námi vybraného dokumentu z daného archivu, pro který je dostupný přepis.
+
+[MARKDOWN]
+## Cvičení
+
+[MARKDOWN]
+V tomto cvičení je konfigurace potřebných knihoven o něco komplexnější a probíhá ve třech krocích.
+
+
+[CODE]
+%%capture
+!pip install "numpy<2" --force-reinstall
+!pip install stanza
+!pip install gensim
+import os
+os._exit(0)
+
+[CODE]
+# náš notebook se nyní restartoval, což po instalaci specifických knihoven potřebujeme
+# Uvidíme chybovou hlášku "Your session crashed for an unknown reason.", která je ale v našem případě naprosto v pořádku.
+
+# Můžeme tedy pokročit dále.
+
+[CODE]
+%%capture
+import stanza
+stanza.download("cs")
+czech_pipeline = stanza.Pipeline("cs")
+import requests
+from urllib.request import urlopen # pro práci w webovými adresami
+from bs4 import BeautifulSoup # pro práci s webovými stránkami ve formátu html
+import pandas as pd # pro práci s tabulkami ve formátu dataframe
+import nltk # modul pro práci s textovými daty
+from sklearn.feature_extraction.text import CountVectorizer
+nltk.download('punkt')
+import matplotlib.pyplot as plt # modul pro vytváření grafů
+import numpy as np # modul pro pokročilejší matematické operace
+import re
+from sklearn.decomposition import TruncatedSVD
+from gensim.models import KeyedVectors
+
+
+[MARKDOWN]
+Váš hlavní úkol je spojen s buňkou níže. V ní je potřeba nahradit obsah proměnné "url", tj. **vyměnit webovou adresu jednoho dokumentu z AJP za adresu jiného dokumentu z téhož archivu**.  Pozor, že webová adresa musí být uvnitř uvozovek. Aby se změna projevila, je třeba buňku nakonec spustit.
+
+[CODE]
+url = "https://archiv.janpatocka.cz/items/show/308"
+web_text = urlopen(url).read().decode("utf-8")
+soup = BeautifulSoup(web_text, "html.parser")
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="nlp", arg1=url)
+
+[CODE]
+# Pokusme se nalézt v html struktuře název příslušného textu.
+text_title = soup.find("div", id="item_title").get_text()
+text_title
+
+[CODE]
+# A pokusme se nalézt rok vydání.
+[div for div in soup.find_all("div", class_="col span_7_of_9")][3].get_text()
+
+[CODE]
+text_dokumentu = soup.find("div", id="trans_full").get_text()
+text_dokumentu = " ".join(text_dokumentu.split())
+print(text_dokumentu)
+
+[CODE]
+# dokument jako list slov získáme pomocí funkce "split()"
+# uložíme si ho takto do nové proměnné "string_list"
+string_list = text_dokumentu.split()
+# prvních 20 prvků tohoto listu si nyní vypíšeme:
+string_list[:20]
+
+[CODE]
+### pomocí funkce "len()" spočítáme délku tohoto listu slov:
+len(string_list)
+
+[MARKDOWN]
+### Lematizace a postagging
+
+S textem článku, tak jak se nyní nachází v proměnné "text_clanku", bychom se ale při kvantitativní textové analýze stále příliš daleko nedostali. Čeština je totiž morfologicky velice bohatý jazyk. Chceme-li např. spočítat kolikrát se v textu objevuje sloveso "mít", s textem v aktuální podobě se příliš daleko nedstaneme. Zde potřebujeme na naše textová data aplikovat dvě další procedury:
+
+
+1.   lemmatizace, tj. převedení slov z textu do jejich základních tvarů (slovesa do infinitivu, podstatná jména do 1.pádu singuláru apod.)
+2.   POS-tagging ("part-of-speech tags"),  tj. určení slovních druhů a mluvnických kategorií
+
+Aplikace těchto procedur nám umožní získat data z hlediska kvantitativní textové analýzy výrazně zajímavější.
+
+V případě češtiny se můžeme v tomto případě opřít o model pro jazykový model pro zpracování češtiny vyvinutý pro knihovnu [stanza](https://stanfordnlp.github.io/stanza/), konkrétně [stanza-cs](https://huggingface.co/stanfordnlp/stanza-cs). 
+
+
+[CODE]
+sent = "Česká republika je velmi sebevědomý stát, který dokáže stát na vlastních nohách."
+doc = czech_pipeline(sent)
+doc
+
+[CODE]
+# vytvoříme morfoligicky zpracovanou verzi našeho textu a konvenčně si ji uložíme do proměnně `doc`.  
+doc = czech_pipeline(text_dokumentu)
+
+[MARKDOWN]
+Tímto jsme vytvořili morfoligicky zpracovanou verzi našeho textu a konvenčně si ji uložili do proměnně `doc`. Tento objekt nyní neobsahuje pouze syrový text, ale také text rozdělený do vět, každou větu na jednotlivá slova a každému slovo je automaticky přiřazeno jeho *lemma*, morfologické určení a některé další atributy. Na tuto datovou strukturou se můžeme nyní pracovat např. následujícím způsobem:
+
+[CODE]
+data = []
+for i, sentence in enumerate(doc.sentences):
+  for token in sentence.words:
+    data.append({
+      'sent_n' : i,
+      'text': token.text,
+      'lemma': token.lemma,
+      'upos': token.upos,
+      'xpos': token.xpos
+    })
+data_df = pd.DataFrame(data)
+data_df[30:40]
+
+[MARKDOWN]
+Obdobně můžeme vybrat z vět pouze lemmata slov vybraných slovních druhů:
+
+[CODE]
+lemmatized_sentences = []
+for sent in doc.sentences:
+  sentence_lemmata = []
+  for token in sent.words:
+    if token.upos in ["PROPN", "NOUN", "VERB", "ADJ"]:
+      sentence_lemmata.append(token.lemma)
+  lemmatized_sentences.append(sentence_lemmata)
+
+[CODE]
+lemmatized_sentences[:3]
+
+[MARKDOWN]
+V této podobě může být již vcelku zajímavé podívat se na frekvence výskytů slov, resp. jejich lematizovaných tvarů. K tomu použijeme funkce z modulu "nltk".
+
+[CODE]
+# nejprve si z naší filtrované tabulky vyxtrahujeme lemmata samotná
+lemmata = [l for s in lemmatized_sentences for l in s]
+# pro každý jednotlivý výraz necháme spočítat jeho počet výskytů
+lemmata_freq = nltk.FreqDist(lemmata)
+# vybereme např. 10 nejfrekventovanějších slov (rozumějme lemmatizovaných substantiv, adjektiv a sloves)
+lemmata_most_freq = lemmata_freq.most_common(10)
+print(lemmata_most_freq)
+
+[MARKDOWN]
+Nyní si tato data vizualizujeme.
+
+[CODE]
+# kvůli horizontálnímu zobrazení prohodíme pořadí na našem listu
+lemmata_mostfreq = lemmata_most_freq
+lemmata_mostfreq.reverse()
+
+# pro potřeby grafu přiřadíme hodnoty jednotlivým osám
+height = [tup[1] for tup in lemmata_mostfreq]
+bars = [tup[0] for tup in lemmata_mostfreq]
+y_pos = np.arange(len(bars))
+
+plt.barh(y_pos, height)
+# graf si pojmenujeme a osu také
+plt.yticks(y_pos, bars)
+plt.xlabel('Frekvence výskytů')
+plt.title('Frekvence výskytů nejčastějších slov')
+# graf si zobrazíme
+plt.show()
+
+[MARKDOWN]
+Přehled nejfrekventovanějších slov jistě představuje cennou informaci o obsahu zkoumaného textu či souboru textů. Neříká však nic o tom, jakým způsobem jsou zde příslušná slova použita. K tomu potřebujeme zaprvé a především informaci o tom, která slova se spolu a jak často spoluvyskytují. Tuto informaci získáme tak, že zkonstruujeme tzv. **kookurenční matici**. 
+
+
+
+[CODE]
+vocabulary = [tup[0] for tup in lemmata_freq.most_common(100)]
+vect = CountVectorizer(vocabulary=vocabulary, lowercase=False)
+X = vect.fit_transform([" ".join(sent) for sent in lemmatized_sentences])
+Xc = (X.T * X)  # This is the matrix manipulation step
+cooccurrence_matrix_df = pd.DataFrame(Xc.todense(), index=vocabulary, columns=vocabulary)
+cooccurrence_matrix_df.head()
+
+[CODE]
+kontrola_pruchodu(ntb="nlp", arg1=vocabulary[:10])
+
+[MARKDOWN]
+Pokud jsme se dostali až jsem, hlavní část našeho úkolu byla splněna. Máme-li však čas a chuť, můžeme pokračovat dále.
+
+[MARKDOWN]
+> **Zde končí povinná část cvičení.**
+
+[MARKDOWN]
+## Rozšiřující analýza: Analýza všech děl z Archivu Jana Patočky 
+
+[CODE]
+def get_patocka(url):
+  textdata = {}
+  try:
+    web_text = urlopen(url).read().decode("utf-8")
+    soup = BeautifulSoup(web_text, "html.parser")
+    text_title = soup.find("div", id="item_title").get_text()
+    date = [div for div in soup.find_all("div", class_="col span_7_of_9")][3].get_text()
+    text_dokumentu = soup.find("div", id="trans_full").get_text()
+    text_dokumentu = " ".join(text_dokumentu.split())
+    #print(id)
+    textdata["url"] = url
+    textdata["title"] = text_title
+    textdata["date"] = date
+    textdata["rawtext"] = text_dokumentu
+  except:
+    pass
+  return textdata
+
+[MARKDOWN]
+Získejme zdrojový kód jedné stránky soupisu přepsaných textů a získejme URL odkazy všech dokumentů, na které odkazuje: 
+
+[CODE]
+base_url = "https://archiv.janpatocka.cz/items/browse?tags=fulltext&page="
+page_url = base_url + str(2)
+resp_text = requests.get(page_url).text
+["https://archiv.janpatocka.cz" + href for href in re.findall(r"/items/show/\d+", resp_text)]
+
+[MARKDOWN]
+Tuto proceduru nyní zopakujeme pro všechny zbývající stránky:
+
+[CODE]
+docs_urls = []
+base_url = "https://archiv.janpatocka.cz/items/browse?tags=fulltext&page="
+for page_n in range(1,34):
+  page_url = base_url + str(page_n)
+  resp_text = requests.get(page_url).text
+  page_urls = ["https://archiv.janpatocka.cz" + href for href in re.findall("/items/show/\d+", resp_text)]
+  docs_urls.extend(page_urls)
+
+[MARKDOWN]
+kolik odkazů jsme získali?
+
+[CODE]
+len(docs_urls)
+
+[CODE]
+docs_urls = list(set(docs_urls))
+len(docs_urls)
+
+[CODE]
+docs_urls[:3]
+
+[MARKDOWN]
+Nyní můžeme získat přepisy textů ze všech těchto stránek. Tato procedura však zabere značný čas. V rámci výuky ji tudíž můžeme přeskočit a načteme místo toho již předpřipravená data.
+
+[CODE]
+#data = []
+#for url in docs_urls:
+#  textdata = get_patocka(url)
+#  data.append(textdata)
+#patocka_all_df = pd.DataFrame(data)
+#patocka_all_df = patocka_all_df.dropna()
+
+[MARKDOWN]
+Textová data ve sloupci `rawtext` si nyní můžeme lemmatizovat pomocí funkce níže. I tato procedura je však v případě celého korpusu relativně výpočetně náročná, a proto ji nyní také přeskočíme a načteme již lemmatizovaná data.
+
+[CODE]
+def get_lemmatized_sents(rawtext):
+  try:
+    doc = czech_pipeline(rawtext)
+    lemmatized_sentences = []
+    for sent in doc.sentences:
+        sentence_lemmata = []
+        for token in sent.words:
+            if token.upos in ["PROPN", "NOUN", "VERB", "ADJ"]:
+                sentence_lemmata.append(token.lemma)
+        lemmatized_sentences.append(sentence_lemmata)
+    return lemmatized_sentences
+  except:
+    return []
+
+[CODE]
+#patocka_all_df["lemmatized_sents"] = patocka_all_df["rawtext"].apply(get_lemmatized_sents)
+# patocka_all_df.to_json("../data/patocka_all_df.json")
+
+[CODE]
+patocka_all_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/patocka_all_df.json")
+patocka_all_df.head(5)
+
+[CODE]
+patocka_all_df.shape
+
+[CODE]
+all_sents = [sent for doc in patocka_all_df["lemmatized_sents"] for sent in doc]
+docs = [" ".join(sent) for sent in all_sents]
+lemmata_flat = [t for s in all_sents for t in s]
+lemmata_freqs = nltk.FreqDist(lemmata_flat).most_common()
+vocabulary = [tup[0] for tup in lemmata_freqs][:500]
+lemmata_freqs[:10]
+
+[CODE]
+vect = CountVectorizer(vocabulary=vocabulary, lowercase=False)
+X = vect.fit_transform(docs)
+Xc = (X.T * X)  # This is the matrix manipulation step
+cooccurrence_matrix_df = pd.DataFrame(Xc.todense(), index=vocabulary, columns=vocabulary)
+cooccurrence_matrix_df.head()
+
+[CODE]
+svd = TruncatedSVD(n_components=100)  # choose the number of components
+X_reduced = svd.fit_transform(Xc)
+
+[CODE]
+kv = KeyedVectors(vector_size=X_reduced.shape[1])
+for word, vector in zip(vocabulary, X_reduced):
+  kv.add_vector(word, vector)
+
+[CODE]
+kv.most_similar("svět")
+
+============================================================
+FILE: ocr.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/ocr.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# OCR: Rozpoznávání znaků textu
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+Tato kapitola ukazuje základy technologie optického rozpoznávání znaků (tzv. OCR=Optical Charater Recognition). K OCR lze v Pythonu použít knihovnu `pytesseract`, postavené na nástroji Tesseract. Nejprve je tudíž potřeba mít nainstallovaný Tesseract, což není triviální úloha, neboť závisí na konkrétní verzi operečního systému. Instrukce pro windows a linux je možné nalézt zde: https://github.com/UB-Mannheim/tesseract/wiki. Pro mac nám napoví např. ChatGPT. Jelikož pracuji na macu, zde nabízím příkazy k instalaci Tesseractu pomocí terminálového instalačního nástroje `brew`: 
+``` 
+brew install tessaract
+brew install tessaract-lang
+```
+
+Pro ukázku si načteme jeden dokument z projektu scriptum.cz, který neprošel OCR analýzou:
+
+[MARKDOWN]
+## Cvičení
+
+[CODE]
+#!pip install PyMuPDF
+import fitz
+import requests
+import io
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import pytesseract
+import cv2
+import matplotlib.patches as patches
+import re
+from bs4 import BeautifulSoup
+import pandas as pd
+import nltk
+
+[CODE]
+url = "https://scriptum.cz/soubory/scriptum/svedectvi/svedectvi_1966_29.pdf" # "https://scriptum.cz/soubory/scriptum/komunikace/prazske_komunikace_1987_01.pdf"
+
+pdf_object = io.BytesIO(requests.get(url).content)
+doc = fitz.open("pdf", pdf_object.read())
+doc.page_count
+
+[MARKDOWN]
+Pro potřeby testování opět vybereme jednu náhodnou stránku a vytvoříme z ní objekt obrázku.
+
+[CODE]
+p = doc.load_page(20)
+pix = p.get_pixmap()
+np_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array)
+ax.set_axis_off()
+
+[CODE]
+%%time
+pytesseract.image_to_string(np_array, lang="ces")
+
+[MARKDOWN]
+Tuto proceduru nyní snadno aplikujeme na všechny stránky v daném dokumentu. Tato procedura však již může zabrat nezanedbatelný čas. 
+
+[CODE]
+%%time
+text = ""
+for p in doc:
+    pix = p.get_pixmap()
+    np_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+    str = pytesseract.image_to_string(np_array, lang="ces") + "[pagebreak]"
+    text += str 
+
+[MARKDOWN]
+Podívejme se nyní na výsledný text. Z kolika sestává znaků?
+
+[CODE]
+len(text)
+
+[CODE]
+text[16000:17000]
+
+[MARKDOWN]
+Vidíme, že výsledky nejsou kdovíjaké.
+
+[MARKDOWN]
+### Morfologické transformace
+
+Často se potýkáme s tím, že podkladové obrázky (skeny jednotlivých stran) nejsou v dobré kvalitě. Existuje však řada algoritmů "out-of-the-box", které mohou kvalitu obrázků změnit, např. zvýšením kontrastu.
+
+[CODE]
+p = doc.load_page(20)
+pix = p.get_pixmap()
+np_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+
+[CODE]
+kernel = np.ones((2, 2), np.uint8)
+np_array_corrected = cv2.erode(np_array, kernel, iterations=1)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array_corrected)
+ax.set_axis_off()
+print(pytesseract.image_to_string(np_array_corrected, lang="ces"))
+
+[CODE]
+# DILATION
+kernel = np.ones((1, 1), np.uint8)
+np_array_corrected = cv2.dilate(np_array, kernel, iterations=1)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array_corrected)
+ax.set_axis_off()
+print(pytesseract.image_to_string(np_array_corrected, lang="ces"))
+
+[CODE]
+
+# EROSION
+kernel = np.ones((1, 1), np.uint8)
+np_array_corrected = cv2.erode(np_array, kernel, iterations=1)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array_corrected)
+ax.set_axis_off()
+print(pytesseract.image_to_string(np_array_corrected, lang="ces"))
+
+[CODE]
+
+# CLOSING
+kernel = np.ones((1, 1), np.uint8)
+np_array_corrected = cv2.morphologyEx(np_array, cv2.MORPH_CLOSE, kernel)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array_corrected)
+ax.set_axis_off()
+print(pytesseract.image_to_string(np_array_corrected, lang="ces"))
+
+[CODE]
+kernel = np.ones((1,1),np.uint8)
+opening = cv2.morphologyEx(np_array, cv2.MORPH_OPEN, kernel)
+np_array_corrected = cv2.morphologyEx(np_array, cv2.MORPH_CLOSE, kernel)
+fig, ax = plt.subplots(dpi=300)
+ax.imshow(np_array_corrected)
+ax.set_axis_off()
+print(pytesseract.image_to_string(np_array_corrected, lang="ces"))
+
+============================================================
+FILE: pdf.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/pdf.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# PDF: Extrakce textu
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+
+[MARKDOWN]
+## Úvod a cíle kapitoly
+
+V této kapitole si ukážeme základní principy práce s PDF soubory. Formát PDF zavedl v roce 1993 John Warnock, spoluzakladatel společnosti Adobe. Cílem bylo nalézt způsob, jak by se dokumenty z jakékoli aplikace daly jednoduše ukládat, posílat v elektronickém formátu a prohlížet a tisknout na jakémkoli počítači, aniž by došlo ke změně jejich podoby. 
+
+PDF s rozpoznanou textovou vrstvou (nebo nativně vygenerované PDF) má kromě vizuální podoby uložen i strojově čitelný text. Základní entitou zde však není předpřipravený textový blok, ale jednotlivý znak (glyf). Každý znak má v dokumentu definovanou svou přesnou pozici na stránce (geometrii, typicky souřadnice x, y a ohraničující obdélník) a příslušný font. Software pro práci s PDF pak na základě těchto geometrických vlastností spojuje jednotlivé znaky do slov a řádek. Jedná-li se o PDF dokument, který vznikl např. převodem .docx souboru, lze očekávat, že textový obsah bude bezchybný. Jedná-li se však o soubor, který vznikl digitalizací analogového dokumentu, často zde narazíme na určité nedostatky spjaté s technologií OCR. Této technologii se budeme věnovat v samostatné kapitole.
+
+V následujícím cvičení budeme PDF soubory zpracovávat pomocí Python knihovny `PyMuPDF`, která se do Python prostředí importuje pod přezdívkou `fitz`. 
+
+Toto cvičení je postaveno na textech zpřístupněných na stránkách [scriptum.cz](https://scriptum.cz). Tato webová platforma zpřístupňuje českou exilovou a samizdatovou literaturu z období komunismu. Jedná se o projekt Sdružení občanů Exodus v Plzni a Třemošné, který funguje od roku 2007. Digitalizace textů je náplní práce lidí se zdravotním handicapem v rámci chráněné dílny. Jedná se o unikátní kolekci několika set titulů a více než 11 tisíc souborů. 
+
+[MARKDOWN]
+## Cvičení
+
+[CODE]
+%%capture
+!pip install PyMuPDF stanza wordcloud
+import fitz
+import stanza
+stanza.download("cs")
+czech_pipeline = stanza.Pipeline("cs")
+from wordcloud import WordCloud
+import requests
+import io
+import pickle
+import os
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import re
+from bs4 import BeautifulSoup
+import pandas as pd
+import nltk
+
+[MARKDOWN]
+
+Pro ukázku si nyní do našeho Python prostředí načteme jedno číslo exilového časopisu *Studie*, revue Křesťanské akademie.  
+
+[CODE]
+url = "https://files.scriptum.cz/scriptum/studie/studie_1958_002_ocr.pdf"
+pdf_object = io.BytesIO(requests.get(url).content)
+doc = fitz.open("pdf", pdf_object.read())
+
+[MARKDOWN]
+Nyní máme proměnnou s názvem `doc`, v níž máme načtený celý PDF soubor i se svými vlastnostmi.
+
+[CODE]
+doc.page_count
+
+[CODE]
+# Můžeme si například načíst data z konktrétní stránky.
+p = doc.load_page(10)
+
+[CODE]
+p
+
+[CODE]
+pix = p.get_pixmap()
+
+[CODE]
+# podívat se, kolik má pixelů na šířku
+pix.width
+
+[CODE]
+# a na délku
+pix.height
+
+[MARKDOWN]
+Příslušný obrázek stránky má v tuto chvíli podobu matice či tabulky o 585 sloupcích a 769 řádcích. Co se však nachází v jednotlivých políčkách této tabulky? Abychom to mohli blíže prozkoumat, data si ještě jednou prozatimně převedeme do standardního maticového objektu (tzv. `array`) knihovny `numpy`. A následně se podíváme na malý výřez dat pro několik pixelů:
+
+[CODE]
+np_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+np_array[400:404, 200:205]
+
+[MARKDOWN]
+Takto vypadají data pro celkově 20 pixelů. Jedná se o pixely z řádek 400 až 403 a sloupců 200 až 204 (pozor na indexování od nuly).
+
+Trojice číslic udává pro každý pixel jeho barvu ve standardu RGB, o kterým si můžeme přečíst více např. na wikipedii [zde](https://cs.wikipedia.org/wiki/RGB). Každé číslo může nabývat na hodnotě 0-255 a jednotlivé hodnoty odpovídají intenzitám červené (*R*), zelené (*G*) a modré (*B*). Černá barva je definována hodnotami (0, 0, 0), zatímco bílá hodnotami (255, 255, 255). V případě že se jedná o obrázek, který pochází z textového dokumentu na bílém pozadí, můžeme očekvávat, že velké množství pixelů bude nabývat hodnot (255,255,255). Tam, kde se naopak nacházejí nulové hodnoty, bude se jednat o černou. Tam, kde jsou hodnoty pro všechny tři barvy stejné, půjde o barvu na škále šedi, od úplné černé až po bílou. 
+
+To jsou důležité vlastnosti, na kterých je postaveno velké množství algoritmů pro zpracování obrázků, které mají například za cíl zvýšit jejich kontrast apod. To je klíčové i pro potřeby rozpoznávání znaků (OCR), kterému se budeme na jiném místě.
+
+Tento malý výsek stránky se nyní můžeme snadno zobrazit:
+
+[CODE]
+plt.imshow(np_array[400:404, 200:205])
+
+[MARKDOWN]
+Nyní se však již podíváme na obrázek stránky jako celek.
+
+[CODE]
+plt.imshow(np_array)
+
+[MARKDOWN]
+Snadno si zobrazíme opět jiný výřez této stránky.
+
+[CODE]
+plt.imshow(np_array[410:730, 35:560])
+
+[MARKDOWN]
+Nyní se vraťme k našemu objektu `p`, který reprezentuje veškerá data spojená s danou stránkou. Velice přímočarým způsobem získáme kompletní textový obsah:
+
+[CODE]
+print(p.get_text())
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="pdf", arg1=p.get_text())
+
+[MARKDOWN]
+Pokročilejší způsob představuje vyjmout textová data ze stránky po jednotlivých textových blocích, které obsahují i informaci o svém geometrickém umístění uvnitř stránky. To je zvláště důležité tehdy, je-li text v našem dokumentu formátován ve vícero sloupcích. Jako příklad vezměme následující stránku z pozdějšího čísla časoopisu studie.
+
+[CODE]
+url = "https://files.scriptum.cz/scriptum/studie/studie_1968_014_ocr.pdf"
+pdf_object = io.BytesIO(requests.get(url).content)
+doc = fitz.open("pdf", pdf_object.read())
+p = doc.load_page(21)
+pix = p.get_pixmap()
+np_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+plt.figure(dpi=100) # pokud chceme obrázek zvětšit, změníme hodnotu na této řádce
+plt.imshow(np_array)
+
+[MARKDOWN]
+Zde je potřeba zachytit, kde začíná a končí jeden text a začíná následující.
+
+[CODE]
+textblocks = p.get_text_blocks() # ("blocks")
+textblocks
+
+[MARKDOWN]
+Geometrie zde vymezuje dva body ohraničující obdelník, v němž se text nachází:
+
+[CODE]
+rect = textblocks[2][:4]
+
+[CODE]
+fig, ax = plt.subplots()
+
+for textblock in textblocks:
+    rect = textblock[:4]
+    ax.imshow(np_array)
+    patch = patches.Rectangle((rect[0], rect[1]),  # Bottom left corner
+                          rect[2] - rect[0],  # Width
+                          rect[3] - rect[1],  # Height
+                          linewidth=1, edgecolor='r', facecolor='none')
+    ax.add_patch(patch)
+
+[MARKDOWN]
+Mít povědomí o těchto strukturálních vlastnostech PDF dokumentů je velice důležité, když z těchto dokumentů chceme získat strojově čitelný text pro další textové analýzy. PDF dokumenty jsou například často opatřeny záhlavím či zápatím, kde se objevuje třeba číslo stránky, jako je tomu zde, jindy je zde název periodika, jméno autora, jméno příspěvku apod. Vyextrahujeme-li ze všech stránek v daném dokumentu syrový text pomocí p.get_text(), budeme v našem textu mít i řetězce znaků z těchto textových bloků, což není žádoucí. Buď se tomu pokusíme předejít již při samotné extrakci, kdy můžeme využít geometrické polohy jednotlivých text bloků,  nebo se těchto dat pokusíme zbavit během následného čištění, např. pomocí *regulárních výrazů* (viz příslušná kapitola). Který případ je vhodnější závisí případ od případu a vyžaduje testování. Zde se budeme držet druhého případu.
+
+[CODE]
+text = ""
+for p in doc:
+    text += p.get_text()
+
+[CODE]
+text[10000:12000]
+
+[CODE]
+print(text[10000:12000])
+
+[MARKDOWN]
+Na text aplikujeme několik čistících funkcí.
+
+[CODE]
+test = "neboť v tomto času se do-\npracoval k formulací své otázky"
+test = re.sub(r"(?<=[A-Za-z])-\s", "", test)
+test
+
+[CODE]
+# pomocí regexu uděláme základní opravu textu
+text = re.sub(r"\n\s?\d{1,3}\s?\n", "\n", text)
+text = re.sub(r"\xad\n", "", text)
+text = re.sub(r"(?<=\w)-[\n|\s]", "", text)
+text = re.sub(r"\s\s+", " ", text.replace("\n", " "))
+
+[CODE]
+# pomocí indexování si zobrazíme náhodný úsek celého textu
+text[10000:12000]
+
+[MARKDOWN]
+Výsledek zdaleka není perfektní. V textu stále vidíme řadu problémů. Některé souvisejí s formátováním, jiné jsou dědictvím OCR analýzy. Pro naše aktuální potřeby však text v této podobě postačuje. 
+
+
+[MARKDOWN]
+### Aplikace NLP na získaný text
+
+[CODE]
+chunks = re.findall(r'.{0,50000}\.\s', text, re.DOTALL)
+chunks_end = sum([len(chunk) for chunk in chunks])
+chunks.append(text[chunks_end:])
+docs = [czech_pipeline(chunk) for chunk in chunks]
+
+[CODE]
+[len(chunk) for chunk in chunks]
+
+[CODE]
+lemmatized_sents = []
+for doc in docs:
+    for sent in doc.sentences:
+        lemmatized_sents.append([t.lemma for t in sent.words if t.upos in ["PROPN", "NOUN", "VERB", "ADJ"]])
+
+[CODE]
+lemmatized_sents[100:110]
+
+[CODE]
+# snadno so vyobrazíme například nejčastějších 20 slov
+nltk.FreqDist([w for s in lemmatized_sents for w in s]).most_common(20)
+
+[CODE]
+kontrola_pruchodu(ntb="pdf", arg1=lemmatized_sents[50])
+
+[MARKDOWN]
+> **Zde končí povinná část cvičení.** 
+
+[MARKDOWN]
+## Rozšiřující analýza 1: Extrakce textu ze všech čísel periodika
+
+[MARKDOWN]
+Nyní postoupíme dále a aplikujeme tento přístup na vyextrahování textu ze všech čísel daného periodika: https://scriptum.cz/cs/periodika/studie.
+
+Použijeme obdobný postup, jaký jsme použili v kapitole o webscrapingu. Nejprve si vyextrahujeme seznam jmen všech relevantních souborů (zajímají nás pouze souboru, které končí "ocr.pdf" - i zde se nám hodí regex).
+
+Tyto funkce jsou však již výpočetně poměrně náročné, tudíž tuto sekci je možné přeskočit.
+
+[CODE]
+resp = requests.get("https://scriptum.cz/cs/periodika/studie")
+soup = BeautifulSoup(resp.content)
+hrefs = [a.get('href') for a in soup.find_all("a")]
+hrefs = [href for href in hrefs if re.search("ocr\.pdf$", href)]
+hrefs = [href for href in hrefs if not ("rejstrik" in href or "obsah" in href)]
+hrefs[:20]
+
+[CODE]
+len(hrefs)
+
+[MARKDOWN]
+Nyní si vytvoříme funkci, do které vnoříme všechny extrakční, transformační a čistící procedury, které jsme prošli výše.  
+
+[CODE]
+def get_cleaned_text(url):
+    try:
+        filename = url.rpartition("/")[2]
+        pdf_object = io.BytesIO(requests.get(url).content)
+        doc = fitz.open("pdf", pdf_object.read())
+        text = ""
+        for p in doc:
+            text += p.get_text()
+        pattern = r"(_+)?(\n?Studie[\s_]+\d{4}\n?)(\W*\w{0,3}\s*/\s*\d\n?)?"
+        text = re.sub(pattern, "\n", text)
+        text = re.sub(r"\n\s?\d{1,3}\s?\n", "\n", text)
+        text = re.sub(r"\xad\n", "", text)
+        text = re.sub(r"\s\s+", " ", text.replace("\n", " "))
+        text = text.replace("- \n", "")
+        year = int(re.search(r"\d{4}", filename).group())
+        return filename, year, text
+    except:
+        pass
+
+[MARKDOWN]
+A následně tuto funkci aplikujeme jeden po druhém na všechny dostupné soubory pomocí cyklu FOR. Máme před sebou více než 100 jmen souborů, tj. vzneseme více než 100 HTTP dotazů. Tudíž provedení kódu zabere nějaký čas.
+
+[CODE]
+%%time
+scriptum_data = []
+for filename in hrefs:
+    filename, year, text = get_cleaned_text(filename)
+    scriptum_data.append({"filename" : filename, "year" : year, "text" : text})
+
+[MARKDOWN]
+Vyextrahovaná data si převedeme do objektu typu `pandas.DataFrame`
+
+[CODE]
+scriptum_df = pd.DataFrame(scriptum_data)
+scriptum_df.head(10)
+
+[MARKDOWN]
+Spočteme počet znaků v každém z námi vyextrahovaných textů a vytvoříme nový sloupec "n_chars", kam tuto hodnotu uložíme.
+
+[CODE]
+scriptum_df["n_chars"] = scriptum_df["text"].str.len()
+scriptum_df.head(5)
+
+[MARKDOWN]
+Díky tomu můžeme sečíst celkový počet znaků všech textů z daného periodika.
+
+[CODE]
+scriptum_df["n_chars"].sum()
+
+[MARKDOWN]
+Tímto se nám tedy dostal do rukou další nemalý dataset zajímavých kulturních dat. Pokud pracujeme s repozitoří "pribehy-dat" jako celkem, dataset si uložíme do podsložky data:  
+
+[CODE]
+scriptum_df.to_json("scriptum_df.json")
+
+[MARKDOWN]
+## Rozšiřující analýza 2: Zpracování textových dat
+
+Nyní trochu přeskočíme k tématu, kterým se  zabýváme samostatně v jedné z jiných kapitol: kvantitativní textová analýza. Následující sérii kroků proto si proto v tuto chvíli nebudeme podrobně vysvětlovat, zaměříme se až na výsledná data.
+
+Budeme k nim potřebovat knihovnu stanza a model pro předzpracování textových dat v češtině.
+
+[CODE]
+scriptum_df = pd.read_json("scriptum_df.json")
+
+[MARKDOWN]
+Pro testovací účely si vybereme jeden text z jednoho čísla:
+
+[CODE]
+text = scriptum_df["text"].tolist()[0]
+text[2000:3000]
+
+[MARKDOWN]
+Na celý dokument aplikujeme jazykový model pro předzpracování, který text automaticky:
+* rozdělí do vět
+* věty do slov
+* jednotlivým slovům přiřadí *lemmata*, tj. převede je do tvarů, jak je najdeme ve slovníku (např. "je" -> "být").
+* přiřadí jim "part-of-speech" (POS) tagy (např. "NOUN", "VERB" apod. "PUNCT" apod.)
+
+[CODE]
+len(text)
+
+[CODE]
+%%time
+doc = czech_pipeline(text)
+
+[MARKDOWN]
+Vytvořili jsme nový `stanza` objekt `doc`, který obsahuje podrobně jazykově anotovanou reprezentaci celého textu. Z této reprezentace si nyní vyjmeme pouze lemmata vybraných slovních druhů: 
+
+[CODE]
+lemmatized_sents = []
+for sent in doc.sentences:
+    lemmatized_sents.append([t.lemma for t in sent.words if t.upos in ["PROPN", "NOUN", "VERB", "ADJ"]])
+print(lemmatized_sents[100:110])
+
+[MARKDOWN]
+Ani v tomto případě nejsou výsledky ani zdaleka perfektní. Vše se odvíjí zejména z kvality vstupních dat. Vidíme např., že model si nedokáže poradit se slovy, které jsou ve stupních datech zachycena v rozdělené podobě apod. I přesto nyní postoupíme dále a aplikujeme danou proceduru na texty všech čísel. 
+
+Opět si pro tento účel nadefinujeme speciální funkci.
+
+[CODE]
+processed = []
+!mkdir data
+!mkdir data/large_files
+!mkdir data/large_files/lemsents
+def get_lemmatized_sentences(filename, text, n_chars):
+    if filename not in ["studie_1990_132_ocr.pdf"]:
+        if filename + ".pickle" not in os.listdir("../data/large_files/lemsents/"):
+            chunks = re.findall(r'.{0,50000}\.\s', text, re.DOTALL)
+            chunks_end = sum([len(chunk) for chunk in chunks])
+            chunks.append(text[chunks_end:])
+            docs = [czech_pipeline(chunk) for chunk in chunks]
+            lemmatized_sents = []
+            for doc in docs:
+                for sent in doc.sentences:
+                    lemmatized_sents.append([t.lemma for t in sent.words if t.upos in ["PROPN", "NOUN", "VERB", "ADJ"]])
+            processed.append(filename)
+            pathfn = "data/large_files/lemsents/" + filename + ".pickle"
+            with open(pathfn, 'wb') as f:
+                pickle.dump(lemmatized_sents, f)
+            print(filename, n_chars, len(processed))
+        else:
+            pathfn = "data/large_files/lemsents/" + filename + ".pickle"
+            with open(pathfn, 'rb') as f:
+                lemmatized_sents = pickle.load(f)
+    else:
+        lemmatized_sents = None
+    return lemmatized_sents
+
+[MARKDOWN]
+Aplikace této funkce na všechny dokumenty v seznamu však zabere značný čas. Abychom se vyhnuli čekání, načteme si proto data, v kterých jsem již tuto proceduru aplikoval dříve (jak jsem to provedl je vidět v zakomentovaných příkazech v buňce níže.
+
+[MARKDOWN]
+### Nejčastější slova po obdobích
+
+[CODE]
+%%time
+#scriptum_df["lemmatized_sents"] = scriptum_df.apply(lambda row: get_lemmatized_sentences(row["filename"], row["text"], row["n_chars"]), axis=1)
+# scriptum_df.to_json("../data/scriptum_df_lemmata.json")
+scriptum_df = pd.read_json("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/scriptum_df_lemmata.json")
+scriptum_df.head(5)
+
+[CODE]
+periods_freqs = {}
+periods = [(1958,1968), (1969,1976), (1977,1990)]
+periods_labels = ["Studie {0}-{1}".format(str(period[0]), str(period[1])) for period in periods]
+for period, period_label in zip(periods, periods_labels):
+    subset_df = scriptum_df[scriptum_df["year"].between(period[0], period[1])]
+    lemmatized_sents = [sentences for sentences in subset_df["lemmatized_sents"] if sentences != None]
+    sentences_flat = [sent for file_sents in lemmatized_sents for sent in file_sents]
+    lemmata_list = [lemma for sent in sentences_flat for lemma in sent]
+    lemmata_list = [lemma for lemma in lemmata_list if len(lemma) > 1]
+    lemmata_freqs = nltk.FreqDist(lemmata_list).most_common()
+    periods_freqs[period_label] = lemmata_freqs
+
+[MARKDOWN]
+Podívejme se namátkou na 50 nejčastějších slov z nejranějšího období.
+
+[CODE]
+periods_freqs[periods_labels[0]][:50]
+
+[CODE]
+wc = WordCloud(width=800, height=400).generate_from_frequencies(dict(periods_freqs[periods_labels[0]][:50]))
+plt.imshow(wc, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+[CODE]
+n = 100
+fig, axs = plt.subplots(3,1, figsize=(4.5, 5) , dpi=300, tight_layout=True)
+for item, ax in zip(periods_freqs.items(), axs.ravel()):    
+    wc = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(dict(item[1][:n]))
+    ax.imshow(wc, interpolation='bilinear')
+    ax.set_title(item[0])
+    ax.axis("off")
+
+[MARKDOWN]
+### Lematizované věty s vybranými slovy
+
+[MARKDOWN]
+Nyní si nadefinujeme funkci, pomocí které budeme moci vyextrahovat veškeré věty obsahující konkrétní slova.
+
+[CODE]
+def extract_target_sents(lemmatized_sents, targets):
+    try:
+        return [sent for sent in lemmatized_sents if any(target in sent for target in targets)]
+    except:
+        return []
+
+[CODE]
+my_targets = ["kultura"]
+scriptum_df["target_sents"] = scriptum_df["lemmatized_sents"].apply(extract_target_sents, args=(my_targets,))
+
+[CODE]
+scriptum_df["target_sents"].apply(lambda x: len(x) if x != None else 0).sum()
+
+[CODE]
+scriptum_df["target_sents"]
+
+[MARKDOWN]
+Jaká slova se v těchto větách objevují nejčastěji?
+
+[CODE]
+column_sents = scriptum_df["target_sents"].tolist()
+target_sents_counts = nltk.FreqDist([t for sent in [t for sent in column_sents for t in sent] for t in sent]) #
+target_sents_counts = target_sents_counts.most_common()
+target_sents_counts[:20]
+
+[CODE]
+wc = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(dict(target_sents_counts[:50]))
+plt.imshow(wc) # , interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+[CODE]
+column_sents = scriptum_df["target_sents"].tolist()
+target_sents_counts = nltk.FreqDist([t for sent in [t for sent in column_sents for t in sent] for t in sent]) #
+target_sents_counts = target_sents_counts.most_common()
+target_sents_counts[:20]
+
+============================================================
+FILE: python.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/python.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master).
+
+[MARKDOWN]
+# Python: Základní proměnné, funkce a datové struktury
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+### Úvod a cíle kapitoly
+
+V této kapitole se blížeji obeznámíme se základními typy proměnných a datovými strukturami programovacího jazyka Python.
+Ukážeme si také některé často využívané postupy pro analýzu těchto datových struktur, jako je tzv. cyklus FOR.
+Ač se v tomto souboru studijních opor nejedná v pravém smyslu o kurz programování, je tento výklad pro další práci nezbytný.
+
+### Proměnné, datové typy a datové struktury
+
+Základní entitou v jakémkoli programovacím jazyce je proměnná (eng. *variable*). Proměnným připisujeme hodnoty neboli *values*.
+
+Hodnoty proměnných můžopu být buď základní datové typy nebo pokročilejší datové struktury. Základní datové typy jsou tyto:
+*   INTEGER (int) - celá čísla
+*   FLOAT - desetinná čísla, vyznačuje se desetinou čárkou, resp. "."
+*   STRING (str) - řetězec textu
+*   BOOLEAN (bool) - pravda (True) nebo nepravda (False)
+
+Datové struktury nám umožňují zacházet s větším množstvím entit najednou. Nejdůležitější jsou tyto:
+*  LIST - uspořádaný seznam prvků
+*  DICTIONARY (dict) - neuspořádaný seznam párů prvků
+
+Datové struktury se do sebe mohou dále zanořovat. Velice často se např. setkáme s LISTem LISTů
+
+[MARKDOWN]
+
+
+S číselnými proměnnými typu INT a STRING jsme již pracovali v předchozím cvičení. Zde si jen pro úplnost zopakujeme
+
+
+[MARKDOWN]
+### Proměnná typu INTEGER
+
+[CODE]
+# zavedení dvou číselných proměnných
+prvni_ciselna_promenna = 172
+druha_ciselna_promenna = 204
+# k provedení příkazů je potřeba tuto buňku spustit (viz výše)
+
+[CODE]
+# vytvořáme třetí proměnnou, jejímž obsahem učiníme součet našich prvních dvou proměnných
+soucet_promennych = prvni_ciselna_promenna + druha_ciselna_promenna
+# výsledek si vypíšeme
+soucet_promennych
+
+[MARKDOWN]
+### Proměnná typu STRING
+Dále si vytvoříme poroměnnou v podobě textového řetězce.
+Zvolíme si pro ni pokud možno co nejlepší název.
+Chceme, aby šlo o proměnnou typu "string", a nikoli třeba "int" (= integer/celé číslo), což dáme najevo tím, že použijeme uvozovky
+
+[CODE]
+text1 = "První textový obsah. "
+text2 = "Druhý textový obsah. "
+
+[MARKDOWN]
+> **SAMOSTATNÝ ÚKOL**: V buňce níže zkuste sečíst (pomocí symbolu "+") výše definované proměnné typu string `text1` a `text2`. K čemu dojde?
+
+[CODE]
+# Buňka kódu pro samostatný úkol:
+
+
+[MARKDOWN]
+### Proměnná typu FLOAT
+
+Proměnná typu float se chová obdobně jako proměnná typu integer, s tím rozdílem, že umožňuje pracovat s desetinnými čísly.
+Chceme-li tuto proměnnou definovat, vše, co je potřeba, je poxužít znak tečky jako vymezení desetiného čísla.
+
+
+[CODE]
+n1 = 133.3548
+n2 = 234.32
+n = n1 * n2
+n
+
+[MARKDOWN]
+### Proměnná typu BOOLEAN (BOOL)
+
+Proměnné typu bool slouží k zachycení pravdivostních hodnot a jsou hojně uplatňovány v nejrůznějších funkcích při logických operacích a podmínečných výrocích
+K zavedení těchto proměnných se používají anglické výrazy `True` a `False`, a to přesně v této podobě a bez uvozovek.
+
+[CODE]
+val1 = True
+val2 = False
+
+[CODE]
+# chování těchto proměných v případě logického "and"
+val1 and val2
+
+[MARKDOWN]
+> **SAMOSTATNÝ ÚKOL**: Jaký výsledek získáme spojíme-li proměnné `val1` a `val2` pomocí logického "or" (obdobně jako v buňce výše?)
+
+[CODE]
+# Buňka kódu pro samostatný úkol:
+
+
+[MARKDOWN]
+Hodnotu v podobě boolovské proměnné často získáme jako výsledek určitých operací. Např. jako výsledek porovnávání dvou hodnot:
+
+[CODE]
+n1 > n2
+
+[MARKDOWN]
+### Převod mezi typy proměnných
+
+Nezřídka se nám stane, že se v různých datasetech setkáme s tím, že nějaká informace je kódovaná jiným typem proměnné, než bychom si přáli. Např. letopočet, který by měl být definován celým číslem 1920, je kódováno číslem desetinným 1920.0, neboť některé souborové formáty a knihovny pracují primárně s desetinnými čísly. Pro numerické operace nás to nemusí trápit.
+Je však dobré vědět, že mezi různými typy proměnných lze různě převádět pomocí funkcí `str()`, `int()`, `float()` či `bool()`.
+
+[CODE]
+# pomocí funkce int() převedeme rok vyjádřený desetinným číslem na celé číslo
+year = 1920.0
+year = int(year)
+year
+
+[CODE]
+# POZOR: jak ukazuje příklad níže, nejedná se o zaokrouhlování!
+int(197.8)
+
+[MARKDOWN]
+Často narazíme na situaci, kdy je číselná hodnota kódována jako proměnná typu string, a tudíž nepřístupná pro matematické operace.
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením.
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+import requests
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="python", arg1=year)
+
+[CODE]
+legth = "175.6" # proměnná definující výšku, avšak ve formátu string
+
+[MARKDOWN]
+> **SAMOSTATNÝ ÚKOL**: Převeďte proměnnou typu string definovanou v předchozí buňce na proměnnou typu float
+
+[CODE]
+# Buňka kódu pro samostatný úkol:
+
+
+[MARKDOWN]
+### Proměnná obsahující datovou strukturu typu LIST
+
+Chceme-li načíst více dokumentů současně, je ideální, pokud se nám podaří dostat je např. do proměnné ve formátu "list"
+Prvky listu jsou zde opět textové řetězce, kterých se nyní můžeme individuálně dotazovat
+
+[CODE]
+l = [27, 23, 48, 23, 45]
+
+[CODE]
+len(l)
+
+[CODE]
+type(l)
+
+[CODE]
+promenna_list = ["Já jsem první prvek listu. Další prvek přijde až po ukončení uvozovek a čárce.", "Já jsem druhý prvek listu.", "Já jsem poslední prvek listu. My všichni dohromady jsme ohraničeni hranatými závorkami. Ty naznačují, že jsme list."]
+
+[CODE]
+promenna_list
+
+[MARKDOWN]
+### Proměnná obsahující datovou strukturu typu dict (Dictionary)
+
+`dict` je objekt sestávající z řady párů klíčů a k nim přiřazených hodnot. Tyto hodnoty mohou sloužit k vnořování dalších komplexních datových struktur. `dict` nám umožňuje, abychom pomocí klíče vyvolali konkrétní hodnotu. Pro syntax jsou důležité symboly "{", "}" a ":".
+
+
+[CODE]
+# nadefinujeme si vlastní slovník
+my_dict = {"klic1" : "hodnota přiřazená prvnímu klíči", "klic2" : "hodnota přiřazená druhému klíči"}
+my_dict
+
+[CODE]
+# tyto hodnoty můžeme nyní vyvolávat:
+my_dict["klic1"]
+
+[CODE]
+# můžeme přidávat další páry klíčů a hodnot:
+my_dict["klic3"] = "nově přidaná hodnota"
+my_dict
+
+[CODE]
+# hodnoty můžeme také aktualizovat
+my_dict["klic1"] = "aktualizovaná hodnota"
+my_dict
+
+[CODE]
+# hodnotami mohou být i další datové struktury, jako např. list:
+my_dict["klic4"] = [133, 455, 451, 876]
+my_dict
+
+[CODE]
+# klíče si můžeme vypsat:
+my_dict.keys()
+
+[CODE]
+# a hodnoty také...
+my_dict.values()
+
+[CODE]
+kontrola_pruchodu(ntb="python", arg1=my_dict)
+
+[MARKDOWN]
+### Indexování
+
+[MARKDOWN]
+V případě "listů" nás často zajímají jenom některé prvky. K prvkům se dostaneme prostřednictvím indexů.
+Každému prvku v listu je automaticky přiřazeno číslo počínaje "0"
+
+Konkrétní prvek listu si vypíšeme zavoláním jeho indexu, což např. v případě prvního prvku vypadá takto:
+
+[CODE]
+l = [27, 23, 48, 23, 45]
+l[0]
+
+[CODE]
+print(promenna_list[0])
+
+[MARKDOWN]
+Ke druhému až poslednímu listu se naopak dostaneme takto:
+
+[CODE]
+print(promenna_list[1:])
+
+[MARKDOWN]
+### Cyklus FOR
+
+Pomocí cyklu FOR se můžeme např. dotázat, kolik znaků mají jednotlivé prvky našeho listu, a nechat si tyto hodnoty jednu po druhé nechat vytisknout.
+
+[CODE]
+for element in promenna_list:
+    print(len(element))
+
+[MARKDOWN]
+### Podmíněné příkazy IF-ELSE
+
+[MARKDOWN]
+Dalším klíčovým elementem každého programovacího jazyka jsou podmíněné příkazy:
+Jestliže (`if`) dochází ke splnění námi stanovené podmínky, provede se příkaz v odrážce na následující řádce či řádcích; pokud ne, tento následný soubor příkazů se přeskočí a kód buď pokračuje přímo dál, nebo provede příkazy které se nacházejí v odrážce pod příkazem `else`.
+
+Jednoduchý příklad vypadá následovně: Použijeme tuto logiku k tomu, abychom u konkrétního čísla vyhodnotily, zda je vyšší než 30,
+
+[CODE]
+n = 37 # nadefinujeme si číslo
+
+[CODE]
+if n > 30:
+    print(n, " - Toto číslo je větší než 30.")
+
+[MARKDOWN]
+Užitečnost tohoto snad vysvytne více, když podmíněný příkaz IF zakomponujeme do cyklu FOR.
+
+
+[CODE]
+l = [27, 23, 48, 23, 45]
+for el in l:
+    if el > 30:
+        print(el, ":-)")
+    else:
+        print(":-(")
+
+============================================================
+FILE: regex.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/regex.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+
+# Regulární výrazy
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+[MARKDOWN]
+V této kapitole si ukážeme základy tzv. regulárních výrazů. Regulární výrazy představují velice sofistikovaný způsob, jak vyhledávat v textových datech určité řetězce znaků a případně je nahrazovat jinými řetězci znaků. Na rozdíl od standardního vyhledávání však regulární výrazy umožňují vyhledávání na abstraktnější rovině, pomocí obecnějších pravidel či "regulí" a "divokých karet". K tomu se používají speciálně nadefinované pomocné znaky. Regex je technologie, která nemá co dočinění s Pythonem - lze jej používat v mnoha různých aplikacích, včetně webových (např. https://regex101.com).
+
+V rámci Pythonu je pro *regex* dostupná velice praktická knihovna `re`, na které budou naše ukázky níže postaveny. Pro systematičtější pohled však tentokrát z našeho juypter notebooku na chvíli vystoupíme a projdeme si sérii cvičení na webové stránce https://regexone.com.
+
+[MARKDOWN]
+Knihovna `re` v sobě má celou řadu užitečných metod. My zde budeme pracovat jen s několika z nich. Zejména
+  * `re.search(pattern, string)`: nalezne uvnitř prohledávaného řetězce znaků (parametr `string`) první výskyt (tzv. `match`) hledáného řetězce znaků (`pattern`) a poskytne nám informaci o tom, kde se hledaný řetězec nachází
+  * `re.findall(pattern, string)`:  nalezne uvnitř prohledávaného řetězce znaků (parametr `string`) všechny výskyty (`matches`) hledáného řetězce znaků (`pattern`) a poskytne nám informaci o tom, kde se hledané řetězce nachází
+  * `re.sub(pattern, repl, string)`:  nalezne uvnitř prohledávaného řetězce znaků (parametr `string`) všechny výskyty hledáného řetězce znaků (`pattern`) a nahradí jej řetězcem `repl`.
+
+
+[CODE]
+import requests
+import re
+import pandas as pd
+import matplotlib.pyplot as plt
+!pip install lxml
+from bs4 import BeautifulSoup
+from getpass import getpass
+import json
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+[MARKDOWN]
+Představte si, že chcete v dokumentu vyhledat veškéré výskyty číslic. Pomocí regexu toho lze dosáhnout pomocí použití speciálního znaku "\d".
+
+[CODE]
+# náš dokument se nachází uvnitř proměnné text
+text = "Tento text obsahuje kromě znaků pro písmena i některé číslice, jako je třeba 7, 13, 542, nebo letopočet 1842 apod. Kromě toho obsahuje i některá vlastní jména, jako je třeba Jan Patočka nebo Václav Havel. To nám stačí, abychom si zde vyzkoušeli několik základních principů regexu."
+
+[MARKDOWN]
+Použijeme tedy metodu `re.findall()` a speciální znak "\d"
+
+[CODE]
+matches = re.findall("\d", text)
+matches
+
+[MARKDOWN]
+Nyní jsme zachytili každou číslici zvlášť. Abychom zachytili i víceciferná čísla, musíme použít tzv. kvantifikátor. V našem patternu uděláme jednu drobnou úpravu, a totiž přidáme znaménko +.
+
+[CODE]
+matches = re.findall("\d+", text)
+matches
+
+[MARKDOWN]
+Někdy nás třeba mohou zajímat pouze čísla o určitém počtu cifer, jako jsou letopočty, které jsou již více než tisíc let čtyřciferné a ještě několik tisíc let budou. Toho lze dosáhnout kvantifikátorem využívajícím symboly`{}`, 
+
+[CODE]
+matches = re.findall("\d{4}", text)
+matches
+
+[MARKDOWN]
+Detekce čísel je jen jeden možný příklad. Druhý příklad, než se pustíme do reálných dat, budou vlastní jména. Vlastní jména začínají velkými písmeny. Najděme tedy všechna slova začínající velkými písmeny:
+
+[CODE]
+re.findall("[A-Z]\w*", text)
+
+[MARKDOWN]
+Ano, je zde několik problému. Zaprvé zachycujeme také všechny slova na začátku vět. Jak tomu předejít? Můžeme například definovat, které znaky před našim patternem mít nechceme, tj. interpunkční známénka vyznačující konec věty a mezeru.
+
+[CODE]
+re.findall(r"(?<![.!?])\s([A-Z]\w*)" , text)
+
+[MARKDOWN]
+Jména v našem textu sestávají ze dvou částí: křesťního jména a příjmení. Co se tedy soustředit pouze na situace, kdy se jedná o dvě slova s velkými písmeny po sobě:
+
+[CODE]
+re.findall("[A-Z]\w*\\s[A-Z]\w*", text)
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="regex", arg1="check1")
+
+[MARKDOWN]
+## Regulární výrazy a metadata ze Slovníku českých filozofů
+
+
+Nyní si opět načteme data ze slovníku českých filozofů, která jsme vydolovali v jedné z předchozích kapitol.
+
+[CODE]
+slovnik_df = pd.read_csv("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/slovnik_df.csv")
+slovnik_df.head(5)
+
+[MARKDOWN]
+Ve sloupcích narození a smrt vidíme, že se zde datum a místo narození objevují vždy ve víceméně shodné podobě. Zajímá-li nás např. pouze rok narození či úmrtí, mohlo by nám postačit vyhledat v každém řetězci čtyřciferná čísla. Objevují se zde však i kompletní datumy a místní názvy, kde k těmto událostem došlo.
+
+Uvědomme si, že zde pracujeme  s objektem typu dataframe knihovny pandas. Některé věci je proto potřeba dělat trochu odlišně než na příkladech výše. Naše regexy si zabalíme do vlastních definovaných funkcí, které následně budeme aplikovat na všechny hodnoty ve vybraném sloupci najednou. Funkci níže budeme postupně upravovat tak, aby zachytila více a více potenciálně cenných informací. Výhoda této funkce je, že v sobě má "pojistku" ve formě výjimky (try-except) pro situace, že hledání selže, například z důvodu nevalidních vstupních dat - měli bychom se tedy vyhnout mnoha zde nežádoucím chybovým hláškám.
+
+[CODE]
+def our_regex_matcher(string, regex_pattern):
+    """
+    toto je naše vlastní funkce se dvěma parametry:
+    - string, tj. text, který chceme analyzovat
+    - regex_pattern, tj. regexový patern, který chceme detekovat
+    """
+    try:
+        return re.search(regex_pattern, string).group() 
+    except:
+        return None
+
+[CODE]
+# ukažme si na jednoduchém příkladu, který je shodný s první hodnotou na první řádce ve sloupci "birth"
+our_string = "* 31. 8. 1546 Veleslavín u Prahy"
+
+[MARKDOWN]
+Můžeme si např. nadefinovat regex pattern s názvem `our_pattern` pro detekci  čtyřciferných čísel a použít jej právě jako druhý parametr v naší funkci:
+
+[CODE]
+our_pattern = "\d{4}"
+our_regex_matcher(our_string, our_pattern)
+
+[MARKDOWN]
+Nyní tuto funkci aplikujeme na všechny hodnoty v celém sloupci "birth" a "death" a výsledek přiřadíme dvěma novým sloupcům: "birth_year" a "death_year" 
+
+[CODE]
+slovnik_df["birth_year"] = slovnik_df['birth'].apply(our_regex_matcher, args=("\d{4}",))
+slovnik_df["death_year"] = slovnik_df['death'].apply(our_regex_matcher, args=("\d{4}",))  # 
+# vypíšeme si prvních 10 řádek dataframu"
+slovnik_df.head(10)
+
+
+[MARKDOWN]
+Ač to na první pohlede není zřejmé, naše sloupce s letopočty obsahují ve skutečnosti proměnné typu string. Takže si je ještě převedeme na čísla.
+
+[CODE]
+slovnik_df["birth_year"] = slovnik_df["birth_year"].apply(lambda x: int(x) if x != None else None)
+slovnik_df["death_year"] = slovnik_df["death_year"].apply(lambda x: int(x) if x != None else None)
+
+[MARKDOWN]
+Takto naformátované letopočty již umožňují časové temporální analýzy. Například se můžeme podívat na distribuci narození od 18. století do současnosti po dekádách. 
+
+[CODE]
+fig, ax = plt.subplots()
+slovnik_df["birth_year"].hist(bins=range(1800, 2000, 10), ax=ax)
+ax.set_xlim(1801,2000)
+
+[MARKDOWN]
+Vidíme zde, že nezanedbatelný počet filozofů zahrnutých ve slovníku se narodil ve 20. letech 20. století. To nemusí nutně znamenat, že by se v této dekádě rodilo více filozofických talentů, ale může to být dáno zaměřením autorů Slovníku, kteří věnovali zvláštní pozornost osobnostem své a bezprostředně předcházející generace.
+
+[MARKDOWN]
+Ve sloupcích "birth" a "death" se ve většině případů nachází i informace o tom, kde k těmto událostem došlo. Tato informace se nachází bezprostředně za letopočtem a mezerou. Opět ji můžeme vyxetrahovat pomocí regexu. Vytvoříme si proto však samostatnou funkci:
+
+[CODE]
+def get_place(string, regex_pattern="(\d{4})(\s)(.+)"):
+    try:
+        return re.search(regex_pattern, string).groups()[2]
+    except:
+        return None
+
+[CODE]
+our_string = "* 31. 8. 1546 Veleslavín u Prahy"
+get_place(our_string)
+
+[CODE]
+slovnik_df["birth_place"] = slovnik_df["birth"].apply(get_place)
+slovnik_df["death_place"] = slovnik_df["death"].apply(get_place)
+slovnik_df.head(5)
+
+[MARKDOWN]
+Máme-li místa narození a úmrtí takto v samostatné podobě, můžeme se pro přehled opět podívat na jejich distribuci:
+
+[CODE]
+slovnik_df["birth_place"].value_counts()
+
+[CODE]
+slovnik_df["death_place"].value_counts()
+
+[CODE]
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="regex", arg1="check2")
+
+[MARKDOWN]
+# Rozšiřující analýza 1: Automatické geokódováníí míst narození a úmrtí  
+
+[MARKDOWN]
+Prostorovou informaci nyní máme pouze v podobě textu. Tento formát nám však neumožňuje studovat prostorové distribuce a vztahy pomocí metod **GIS** (viz samostatná kapitola na toto téma, kde se k těmto datům možná vrátíme.
+
+Abychom s našimi daty mohli takto pracovat, je třeba je tzv. geokódovat, tj. opatřit je koordináty zeměpisné šířky a délky. Toho lze dosáhnout buď *manuálně*, postupným procházením jednotlivých místních názvů a dohledávání jich v mapě, a nebo *automaticky*. Pro automatické vyhledávání koordinátů pro místní názvy se nabízí platforma https://www.geonames.org, která disponuje i jednoduchým **API** (viz kapitola o API).
+
+Nejprve si vytvořme si seznam všech unikátních míst v obou sloupcích:
+
+[CODE]
+places_unique = [el for el in set(list(slovnik_df["death_place"]) + list(slovnik_df["birth_place"])) if el != None]
+len(places_unique)
+
+[MARKDOWN]
+Vidíme, že máme co do činění s 584 unikátními místními názvy. Pro zkoušku si vypíšeme 10 z nich:
+
+[CODE]
+places_unique[:10]
+
+[MARKDOWN]
+Nyní můžeme navštívit webovou stránku https://www.geonames.org a vytvořit si na ni účet. Účet si aktivujeme a především pro něj umožňíme používání "free webservices" (jinak nám api nebude fungovat). 
+
+(V případě, že si např. z důvodu časové tísně nechceme účet vytvořit, následující tři buňky přeskočíme a načteme si již mnou předem získaná data.)
+
+[CODE]
+# zadáme naše uživatelské jméno
+user = getpass("Enter your geonames username: ")
+
+[MARKDOWN]
+Níže jako hodnotu proměnné `place_string` na zkoušku zadáme název náhodně zvoleného místa. V případě, že vše funguje správně (tj. zejména že máme funkční a aktivovaný geonames účet a že jsme zvolili místní název, se kterým si platforma geonames umí poradit), buňka nám vypíše geografické koordináty:
+
+[CODE]
+place_string = "Plzeň"
+resp = requests.get("http://api.geonames.org/search?q={0}&username={1}".format(place_string, user))
+soup = BeautifulSoup(resp.content, "xml")
+lat, lng = soup.geoname.lat.string, soup.geoname.lng.string
+print(lat, lng)
+
+[MARKDOWN]
+Stejnou postup můžeme nyní aplikovat na všech 584 unikátních míst ze Slovníku. Jinými slovy, vzneseme 584 HTTP dotazů a v datech odpovědi se pokusíme identifikovat údaje o zeměpisné šířce a délce. Tato data budeme postupně přidávat do objektu `places_unique_dict` typu `dict` - klíčem bude vždy daný zeměpisný název a hodnotou příslušné koordináty.
+
+Aplikace tohoto přístupu na celý dataset by nám však nyní zabrala příliš mboho času. V buňce níže se proto na zkoušku omezíme pouze na prvních deset položek (nejste-li však omezováni časem, můžete odstranit na druhé řádce část `[:10]` a for-loop se aplikuje na celý seznam míst).
+
+[CODE]
+places_unique_dict = {}
+for place in places_unique[:10]:
+    resp = requests.get("http://api.geonames.org/search?q={0}&username={1}".format(place.partition(" (")[0], user))
+    try:
+        soup = BeautifulSoup(resp.content, "xml")
+        lat, lng = soup.geoname.lat.string, soup.geoname.lng.string
+        places_unique_dict[place] = (lat, lng)
+    except:
+        pass
+
+[MARKDOWN]
+Pro kolik míst jsme úspěšně získali nějaké koordináty?
+
+[CODE]
+len(places_unique_dict)
+
+[CODE]
+places_unique_dict
+
+[CODE]
+# v případě, že pracujeme lokálně s repozitoří jako celkem, tak si data můžeme uložit pro další použití
+#with open("../data/jsonplaces_unique_dict.json", 'w') as json_file:
+#    json.dump(places_unique_dict, json_file)
+
+[MARKDOWN]
+Pokud jsme buňkami výše z neprošli (např. protože se nám nepodařilo aktivivovat účet, načteme si data v následující buňce tak, že odstraníme hashtag na začátku řádky a buňku spustíme.
+
+[CODE]
+places_unique_dict = requests.get("https://raw.githubusercontent.com/CCS-ZCU/pribehy-dat/master/data/jsonplaces_unique_dict.json").json()
+[t for t in places_unique_dict.items()][:20]
+
+[MARKDOWN]
+Tato data nyní takříkajíc namapujeme na naše tabulková data k jednotlivým filozofům. Vytvoříme dva nové atributy: "birth_latlong" a "death_latlong".  
+
+[CODE]
+slovnik_df["birth_latlong"] = slovnik_df["birth_place"].apply(lambda x: places_unique_dict[x] if x in places_unique_dict.keys() else None)
+slovnik_df["death_latlong"] = slovnik_df["death_place"].apply(lambda x: places_unique_dict[x] if x in places_unique_dict.keys() else None)
+
+[CODE]
+slovnik_df.head(5)
+
+[CODE]
+# pokud pracujeme lokálně s repozitoří jako celkem, tato data si uložíme pro budoucí použití.
+slovnik_df.to_json("slovnik_geotemporal_df.json")
+
+[MARKDOWN]
+# Rozšiřující analýza 2: Prostorové vizualizace
+
+
+[CODE]
+from shapely.geometry import Point
+import geopandas as gpd
+#!pip install folium
+import folium
+
+[CODE]
+death_geometry = []
+for yx in slovnik_df['death_latlong']:
+    if yx != None:
+        lat, lon = yx  # Correctly assign longitude and latitude
+        death_geometry.append(Point(lon, lat))  # Create Point with correct coordinates
+birth_geometry = []
+for yx in slovnik_df['birth_latlong']:
+    if yx != None:
+        lat, lon = yx  # Correctly assign longitude and latitude
+        birth_geometry.append(Point(lon, lat))
+
+[CODE]
+prague_coords = (50.0755, 14.4378)
+m = folium.Map(location=prague_coords, zoom_start=10, control_scale=True)
+
+for point in birth_geometry:
+    if point is not None:
+        folium.Marker([point.y, point.x],  icon=folium.Icon(color='green')).add_to(m)
+for point in death_geometry:
+    if point is not None:
+        folium.Marker([point.y, point.x],  icon=folium.Icon(color='red')).add_to(m)
+m
+
+============================================================
+FILE: site.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/site.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# Formální síťová analýza
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+## Úvod a cíle kapitoly
+
+V tomto notebooku si budeme prakticky osvojovat koncepty síťové analýzy. Z veřejně dostupných dat si vytvoříme několik síťových grafů, které budeme dále upravovat, analyzovat a vizualizovat.
+
+Jedním z nejhodnotnějších typů historických dat jsou sbírky dopisů, které nám umožňují sledovat kdo, s kým a kdy udřžoval kontakty. Řada těchto dopisních sbírek byla v posledních dekádách digitalizována. Existují tak například digitalizované kolekce sbírkek dopisů středověkých žen (https://epistolae.ctl.columbia.edu/letters/) nebo rozsáhlá kolekce raně novověkých dopisů EMLO (=Early Modern Letters Online, http://emlo-portal.bodleian.ox.ac.uk). Některé tyto datasety umožňují přístup pouze pomocí prohlížeče, a tudíž se nehodí pro datově analytickou práci. Jiné jsou naopak vzorovými příklady datového kurátorství. Ty zde budeme používat.
+
+[MARKDOWN]
+Konkrétně využijeme dataset dopisů mezi britskými vědci konce 18. a celého 19. století **Ɛpsilon** ([web](https://epsilon.ac.uk)), vyvíjený týmem z *Cambridge University Digital Library*. 
+> Ɛpsilon opens up new research opportunities in the history of 19th century science by bringing correspondence data and transcriptions from multiple sources into a single cross-searchable digital platform. It currently holds details of over 50,000 letters and is growing. 
+
+Alespoň z pohledu datové analýzy je velkou devízou tohoto projektu fakt, že veškerá data jsou dostupná nejen pro potřeby prohledávání a pročítání na webu projektu, ale také ve velice úhledné a praktické formě dostupná na GitHubu ([zde](https://github.com/cambridge-collection/epsilon-data)). Nachází se zde jak digitální edice každého jednotlivého dopisu podle standardu TEI-XML, tak i tabulky metadat ve formátu CSV. S těmi budeme níže pracovat my, když se je přímo z GitHubu načteme do našeho výpočetního prostředí. 
+
+Nejprve budeme pracovat s kolekcí dopisů *Londýnské Linneovské společnosti*, která byla založena roku 1788 a existuje dodnes  ([wikipedia](https://en.wikipedia.org/wiki/Linnean_Society_of_London)). Ač nese jméno významného švédského vědce Carla Linného ([wikipedia](https://cs.wikipedia.org/wiki/Carl_Linné)), otce vědecké taxonomie, tato vědecká společnost vznikla v Anglii až po jeho smrti.
+
+Tabulková data budeme zpracovávat pomocí knihovny **pandas**. K síťové analýze využijeme knihovnu **networkX**, jejíž dokumentaci doporučuji k projití si - [zde](https://networkx.org/documentation/stable/index.html).
+
+[MARKDOWN]
+## Cvičení 1: Korespondence Linneovské společnosti
+
+[MARKDOWN]
+### Extrakce a přehled dat
+
+[CODE]
+import numpy as np
+import pandas as pd
+import requests
+import networkx as nx
+import numpy as np
+import matplotlib.pyplot as plt
+import regex
+from bs4 import BeautifulSoup
+
+[CODE]
+# navštívíme url adresu, kde jsou umístěny všechny csv soubory
+resp_json = requests.get("https://api.github.com/repos/cambridge-collection/epsilon-data/contents/csv/").json()
+
+[MARKDOWN]
+Nyní si vypíšeme obsah načtených dat a zorientujeme v příslušné struktuře:
+
+[CODE]
+resp_json
+
+[MARKDOWN]
+Vidíme, že ve struktuře je možné nalézt výpis jednotlivých `csv` souborů, které nás zajímají s odkazy na data ve formátu ke stažení (`"download_url"`)
+
+[CODE]
+# vytvoříme si list URL adres všech csv souborů 
+download_urls = [item["download_url"] for item in resp_json]
+download_urls
+
+[CODE]
+# a také list jmen všech těchto souborů
+filenames = [item["name"] for item in resp_json]
+filenames
+
+[CODE]
+# načteme si data z jednoho konkrétního souboru
+linnean = pd.read_csv("https://raw.githubusercontent.com/cambridge-collection/epsilon-data/main/csv/linnean-society.csv")
+linnean.head()
+
+[MARKDOWN]
+Vidíme zde výpis prvních pěti řádek datové tabulky. Ale kolik vlastně tabulka čítá položek a kolik že je sloupců? To zjistíme z atributu `shape` (atributem je vlastnost datového objektu - jednou z vlastností datového objektu podle standardu `pd.DataFrame` je jeho tvar, tj. počet řádků a sloupců. 
+
+[CODE]
+linnean.shape
+
+[MARKDOWN]
+Než se pustíme do síťových analýz, ještě si upravíme hodnoty v některých sloupcích tak, aby se nám s nimi dobře pracovalo. Sloupec `"sorting_date"` vyjadřuje dataci daného dopisu ve velice úhledném a srozumitelném formátu (yyyy-mm-dd). Jelikož jsme však naše data načetli z prostého `csv` souboru, Python neví nic o tom, že za touto řadou čísel a pomlček se jedná o dataci; k tomu jej musíme nainstruovat.
+
+V buňce níže za tímto účelem vytváříme nový sloupec s výmluvným názvem `"datetime"`. Hodnoty v tomto sloupci jsou výsledkem použití (aplikování) funkce `to_datetime()` z knihovny pandas (`pd`) na hodnoty ve sloupci `"sorting_date"`. Tato funkce "přeloží" jednotlivá čísla na roky, měsíce a dny.
+
+[CODE]
+linnean["datetime"] = linnean["sorting_date"].apply(pd.to_datetime)
+linnean.head(5)
+
+[MARKDOWN]
+Ač hodnoty ve sloupci `"datetime"` vypadají stejně jako hodnoty ve sloupci `"sorting_date"`, chovají se odlišně. Umožňují nám přímo studovat časovou distribuci našich dat. Výhody tohoto formátu si všimneme, když na daný sloupec aplikujeme vizualizační metodu `hist()`:
+
+[CODE]
+linnean["datetime"].hist()
+
+[CODE]
+# snadno se můžeme např. podívat pouze na dopisy odeslané před začátkem 19. století
+linnean["18thcent?"] = linnean["datetime"] < pd.to_datetime("1801-01-01")
+# jen pro ověření se podívejme na prvních 5 řádek takto filtrovaných dat
+linnean[linnean["18thcent?"]].head(5)
+
+[MARKDOWN]
+Vlastní jméno odesilatele a příjemce se nám rozpadá do vícero sloupců ("sender_surname", "sender_forename"). Vytvořme si nyní agregovanou podobu jména.
+
+[CODE]
+linnean["sender_agr"] = linnean.apply(lambda row: str(row["sender_surname"]).replace(" ", "_") + "_" + str(row["sender_forename"]).replace(" ", "_"), axis=1)
+linnean["recipient_agr"] = linnean.apply(lambda row: str(row["recipient_surname"]).replace(" ", "_") + "_" + str(row["recipient_forename"]).replace(" ", "_"), axis=1)
+
+[MARKDOWN]
+Nyní se podíváme na osoby, který poslaly a přijaly největší množství dopisů:
+
+[CODE]
+linnean["sender_agr"].value_counts()
+
+[CODE]
+linnean["recipient_agr"].value_counts()
+
+[MARKDOWN]
+V obou případech vidíme na prvním místě *Sira Jamese Edwarda Smithe*. Což, víme-li něco o Linneovské společnosti nebo podíváme-li se na wikipedii, není příliš překvapivé: jedná se o samotného zakladatele a dlouholetého předsedu této společnosti (viz [wikipedia](https://en.wikipedia.org/wiki/James_Edward_Smith_(botanist))).
+
+V druhé tabulce vidíme na třetím místě také jeho manželku, *Pleasance Smithovou*, která byla taktéž významnou osobností dobového dění (taktéž viz [wikipedie](https://en.wikipedia.org/wiki/Pleasance_Smith)).  
+
+[MARKDOWN]
+### Tvorba síťových dat
+Pro potřeby následujících analýz si naše data výrazně přeskupíme a přetvoříme do podoby *seznamu vážených & směrových vazeb*.
+
+[CODE]
+linnean_edges = linnean.groupby(["sender_agr", "recipient_agr"]).size().reset_index()
+linnean_edges.columns = ["sender_agr", "recipient_agr", "letters_n"]
+linnean_edges.head()
+
+[MARKDOWN]
+Jednotkou pozorování (čili řádkou tabulky) nyní již není každý jednotlivý dopis, ale pár odesilatele a příjemce s informací, kolik odesilatel příjemci zaslal dopisů (viz sloupec `"letters_n"`). Tato data lze již v podstatě považovat za tabulku hran. Můžeme si je setřídit od těch s největší váhou (tj. s nejvyšším počtem dopisů poslaných daným směrem).
+
+[CODE]
+linnean_edges.sort_values("letters_n", ascending=False)
+
+[MARKDOWN]
+Z těchto dat si nyní vytvoříme síťový objekt.
+
+[CODE]
+G = nx.from_pandas_edgelist(linnean_edges, 'sender_agr', 'recipient_agr', 'letters_n', create_using=nx.DiGraph())
+
+[CODE]
+type(G)
+
+[MARKDOWN]
+Základní vlastnosti, které nás o našem grafu zajímají jsou, kolik má uzlů a kolik má hran?
+
+[CODE]
+G.number_of_nodes()
+
+[CODE]
+G.number_of_edges()
+
+[MARKDOWN]
+Další užitečnou informací je, kolik mají uzly v průměru vazeb (tzv. avarege degree).
+
+[CODE]
+sum(dict(G.degree).values()) / G.number_of_nodes()
+
+[MARKDOWN]
+Stejně tak zajímavé bude se podívat, které uzly mají nejvyšší *in-degree* (tj. vazeb do něj vstupujících) a *out-degree*
+(tj. vazeb z něj vystupujících). Podívejme se na deset uzlů s nejvyšší hodnotou in-degree:
+
+[CODE]
+sorted(dict(G.in_degree()).items(), key=lambda item: item[1], reverse=True)[:10]
+
+[MARKDOWN]
+Vidíme, že zcela ústřední pozici zde zaujímá *Sir James Edward Smith*, zakladatel a dlouholetý předseda společnosti. Hned na druhém místě se v jednom uzlu potkávají dopisy, jejichž adresát je neznámý. Nebude od věci tento uzel ze sítě zcela odstranit.
+
+[CODE]
+G.remove_node("Unknown_nan")
+
+[MARKDOWN]
+Utvořený síťový graf si můžeme bezprostřdně vizualizovat pomocí funkce `nx.draw()`:
+
+[CODE]
+nx.draw(G)
+
+[MARKDOWN]
+Bohužel vidíme, že výsledek vypadá spíše nevábně. Podle všeho se zde příliš mnoho uzlů poblíž středu. Vidíme, že vazby mají podobu šipek. Je tomu tak proto, že se jedná o tzv. směrový graf.
+
+Abychom dosáhli lepších výsledků, přidáme do vizualizační funkce několik dodatečných parametrů
+
+[CODE]
+my_color = "darkgreen" # vybereme jakoukoli jinou barvu odtud: https://matplotlib.org/stable/gallery/color/named_colors.html
+nx.draw(G, node_size=20, node_color=my_color, pos=nx.kamada_kawai_layout(G))
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+import requests
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="site", arg1=my_color)
+
+[MARKDOWN]
+Uzly v  grafu se jmenují stejně jako korespondenti. Pomocí syntaxe níže se tak můžeme podívat na vlastnosti jednotlivých vazeb. 
+
+[CODE]
+G["Smith_Sir_James_Edward"]["Macleay_Alexander"]
+
+[CODE]
+G["Macleay_Alexander"]["Smith_Sir_James_Edward"]
+
+
+[MARKDOWN]
+Zde se dozvídáme, že zatímco Sir James Edward Smith poslal Alexanderu Macleayovi 102, v opačném směru jich šlo 74.
+
+[MARKDOWN]
+Pro některé typy analýz je praktičtější i smysluplnější pracovat s nesměrovým grafem. Vazba tak nezohledňuje směr příslušné korespondence a váha může odpovídat součtu vyměněných dopisů v obou směrech. Transformovat naši síť do této podoby vyžaduje několik řádek kódu, jimiž se zde nemusíme příliš zaobírat, důležitější je výsledek.
+
+[CODE]
+to_remove = []
+edges_met = []
+for node1, node2 in G.edges():
+    if (G.has_edge(node2, node1)) & ((node2, node1) not in edges_met):
+        G[node1][node2]["letters_n"] = G[node1][node2]["letters_n"] + G[node2][node1]["letters_n"]
+        to_remove.append((node2, node1))
+    edges_met.append((node1, node2))
+
+[CODE]
+for u,v in to_remove:
+    G.remove_edge(u,v)
+
+[CODE]
+G = G.to_undirected().copy()
+
+[CODE]
+len(G.edges())
+
+[MARKDOWN]
+Zde nyní uvidíme, že v obou směrech je hodnota "letters_n" totožná:
+
+[CODE]
+G["Smith_Sir_James_Edward"]["Macleay_Alexander"]
+
+[CODE]
+G["Macleay_Alexander"]["Smith_Sir_James_Edward"]
+
+[CODE]
+weighted_degrees = {}
+for node in G.nodes():
+    weighted_degrees[node] = G.degree(node, weight='letters_n')
+
+[CODE]
+list(weighted_degrees.items())[:10]
+
+[CODE]
+# tento degree učiníme atributem našich uzlů
+nx.set_node_attributes(G, weighted_degrees, 'weighted_degree')
+
+[MARKDOWN]
+Nyní si vyjmeme pouze uzly, které mají stupeň (degree) alespoň roven 2, tj. uzly osob, kteří v našem datasetu vedly korespondenci s více než jednou osobou.
+
+[CODE]
+node_list = [node for node in G.nodes if G.degree(node) >= 2]
+len(node_list)
+
+[MARKDOWN]
+
+Ukazuje se, že takových uzlů je v našem datasetu relativně málo. Vypišme si jejich jména.
+
+[CODE]
+node_list
+
+[MARKDOWN]
+Nyní tento seznam jmen využijeme k vymezení výseku z našeho grafu (nazveme si jej `Gsub`), který bude zahrnovat pouze tyto uzly. 
+
+[CODE]
+Gsub = G.subgraph(node_list)
+
+[CODE]
+fig, ax = plt.subplots(1,1, figsize=(9, 6), dpi=300, tight_layout=True)
+
+# pro potřeby vizualizace si ještě definujeme šířku čar jednotlivých vazeb,vycházející z objemu vyměněných dopisů. 
+edge_widths = [np.sqrt(d['letters_n']) / 2 for (u, v, d) in Gsub.edges(data=True)]
+
+
+nx.draw(Gsub, with_labels=True, pos=nx.kamada_kawai_layout(Gsub), node_size=100, nodelist=node_list, width=edge_widths, ax=ax)
+
+ax.set_xlim(-1.3, 1.3)
+
+[MARKDOWN]
+Z takovéto vizualizace již lze vypozorovat leccos.
+
+[MARKDOWN]
+## Cvičení 2: Britská vědecká korespondence dlouhého 19. století jako celek
+
+### Extrace a předzpracování dat
+
+Nyní se vrátíme na začátek. Projekt Ɛpsilon totiž hostí vícero kolekcí dopisů z podobného období a je na místě očekávat, že se osoby v těchto kolekcích budou alespoň částečně překrývat.
+
+Vypišme si tedy nejprve jména csv souborů s metadaty k těmto kolekcím.
+
+[CODE]
+resp_json = requests.get("https://api.github.com/repos/cambridge-collection/epsilon-data/contents/csv/").json()
+download_urls = [item["download_url"] for item in resp_json]
+download_urls
+
+[MARKDOWN]
+Nyní pomocí cyklu FOR načteme data ze všech těchto souborů a nakonec je spojíme do jednoho objektu type `pd.DataFrame`.
+
+[CODE]
+dfs = [] # připrav prázdný seznam, který budeme následně postupně plnit daty z jednotlivých kolekcí 
+for url in download_urls: # pro každý z našeho seznamu souborů:
+    try: # zkus: jej načíst jako dataframe
+        collection_df = pd.read_csv(url, on_bad_lines='skip')
+        collection_df["source"] = url.rpartition("/")[2] # přidej tomuto dataframu nový sloupec "source", kde bude uvedeno jméno souboru, ze kterého pochází
+        dfs.append(collection_df) # přidej do seznamu aktuální dataframe
+    except: # pokud to nejde:
+        print("failed: ", url) # vypiš jméno souboru, u kterého to nejde
+epsilon = pd.concat(dfs) # spoj do jednoho všechny dataframy uvnitř seznamu dfs
+
+[CODE]
+epsilon.head(5)
+
+[CODE]
+# jak dlouhý je náš dataset?
+len(epsilon)
+
+[CODE]
+# stejně jako výše agregujme jména autorů a příjemců dopisů do podoby bez mezer a závorek
+epsilon["sender_agr"] = epsilon.apply( lambda row: str(row["sender_surname"]).replace(" ", "_").partition(" (")[0] + "_" + str(row["sender_forename"]).replace(" ", "_").partition(" (")[0], axis=1)
+epsilon["sender_agr"] = epsilon["sender_agr"].apply(lambda x: regex.sub(r"[^\p{L}_-]", "", x))
+
+epsilon["recipient_agr"] = epsilon.apply( lambda row: str(row["recipient_surname"]).replace(" ", "_").partition(" (")[0] + "_" + str(row["recipient_forename"]).replace(" ", "_").partition(" (")[0], axis=1)
+epsilon["recipient_agr"] = epsilon["recipient_agr"].apply(lambda x: regex.sub(r"[^\p{L}_-]", "", x))
+
+# odstraníme neznáme odesilatele a příjemce
+epsilon = epsilon[~epsilon.isin(["Unknown_nan", "AT_TO_LOOK", "nan_nan"]).any(axis=1)]
+
+
+[MARKDOWN]
+Díky attributu "source" se vždy můžeme podívat pouze na výsek dat z konkrétního zdroje:  
+
+[CODE]
+epsilon[epsilon["source"]=="darwin-family-letters.csv"].head(5)
+
+[MARKDOWN]
+Vypišme si nejplodnější autory a nejpopulárnější příjemce:
+
+[CODE]
+epsilon["sender_agr"].value_counts()
+
+[CODE]
+epsilon["recipient_agr"].value_counts()
+
+[MARKDOWN]
+Tentokrát si data vazeb do nesměrové podoby převedeme ještě před vytvořením grafu.
+
+[CODE]
+epsilon_temp = epsilon.apply(lambda row: pd.Series(sorted([str(row["sender_agr"]), str(row["recipient_agr"])])), axis=1)
+epsilon_temp.columns = ["node1", "node2"]
+epsilon_edges = epsilon_temp.groupby(["node1", "node2"]).size().reset_index()
+epsilon_edges.columns = ["node1", "node2", "weight"]
+epsilon_edges = epsilon_edges[epsilon_edges["node1"] != epsilon_edges["node2"]]
+epsilon_edges.head(5)
+
+[MARKDOWN]
+Data v této podobě můžeme již neprodleně použít k tvorbě sítě váženého nesměrového grafu.
+
+[CODE]
+G = nx.from_pandas_edgelist(epsilon_edges, 'node1', 'node2', 'weight')
+
+[MARKDOWN]
+Opět se nejprve podíváme, z kolika uzlů a kolika hran naše síť sestává:
+
+[CODE]
+G.number_of_nodes()
+
+[CODE]
+G.number_of_edges()
+
+[MARKDOWN]
+Z těchto dat lze také snadno vypočítat tzv. *average degree*:
+
+[CODE]
+(2 * G.number_of_edges()) / G.number_of_nodes()
+
+[MARKDOWN]
+U grafu s takto velkým počtem uzlů se nezřídka stane, že se ukáže, že je ve skutečnosti tvořen několika oddělenými komponenty, čili že síť není zcela propojená.
+
+[CODE]
+len(list(nx.connected_components(G)))
+
+[MARKDOWN]
+Ano, to je i náš případ zde, když máme co dočinění s grafem, který sestává z více než 160 komponentů.
+
+Podívejme se, z kolika uzlů sestává deset největších komponentů:
+
+[CODE]
+components_sorted = sorted(list(nx.connected_components(G)), key=len, reverse=True)
+[len(comp) for comp in components_sorted][:10]
+
+[MARKDOWN]
+Vidíme, že většina uzlů je součástí největšího komponentu, druhý největší komponent sestává již pouze z 5 uzlů. S klidným svědomím se nyní zaměříme pouze na největší komponent naší sítě.
+
+[CODE]
+len(components_sorted[0])
+
+[CODE]
+# Omezíme se na největší komponent.
+G = G.subgraph(list(components_sorted[0]))
+
+[CODE]
+G.number_of_nodes() #zkontrolujeme, že se filtrace uzlů povedla
+
+[CODE]
+(2 * G.number_of_edges()) / G.number_of_nodes()
+
+
+[MARKDOWN]
+Pro potřeby několika dalších vizualizací nyní všem uzlům v rámci této sítě přiřadíme pozici v prostoru na základě jejich strukturelního postavení. Přiřazení těchto pozic v případě sítě, která sestává z tisíců uzlů, může být výpočetně poměrně náročné a zabrat nějaký čas. Abychom se níže vyhnuli zbytečnému čekání, vypočteme si tyto pozice uzlů již zde a dále je budeme používat v několika vizualizacích po sobě.
+
+[CODE]
+%%time
+pos = nx.spring_layout(G)
+
+[CODE]
+fig, ax = plt.subplots(figsize=(9,6), dpi=300)
+nx.draw(G, node_size=10, node_color="darkgreen", pos=pos, ax=ax)
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+kontrola_pruchodu(ntb="site", arg1="site2")
+
+[MARKDOWN]
+> Zde končí povinná část cvičení.
+
+[MARKDOWN]
+Tato síť již možná má některé zajímavé topografické vlastnosti, které si zaslouží bližší analytické ohledání.
+
+### Metriky centrality
+
+Jedna skupina populárních a užitečných algoritmů jsou tzv. *metriky centrality* uzlů či vazeb. Uveďme si dvě takové metriky s jejich anglickými názvy a krátkým vysvětlením  nejznámnější s jejich anglickými názvy:
+* **degree centrality**: je definován počtem vazeb, které daný uzel má
+* **closeness centrality**: součet vzdáleností nejkratších cest potřebných k dosažení všech ostatních uzlů uvnitř sítě.
+* **betweenness centrality** (mezilehlost): Jak často se ten který uzel nachází na trase spojující nejkratší cestou jakékoli další uzly uvnitř sítě.  
+* **PageRank centrality**: je určen mnohonásobně opakovanými náhodnými procházkami po síti. Velikost PageRank je určena množstvím návštěv daného uzlu při těchto procházkách. Tento algoritmus byl původně vyvinut vývojáři od společnosti Google pro určení důležitých webových stránek.
+
+S degree centrality jsme již vlastně  pracovali, když jsme se u předchozí sítě omezili pouze na uzly s degree alespoň 2. Tato metrika je také nejsnáze srozumitelná a bude zajímavé si zde představit její výsledky pro potřeby srovnání s výsledky ostatních metrik.
+Jelikož zde však pracujeme s relativně rozsáhlou sítí a náš společný čas je omezený, vyzkoušíme si nyní pouze algrotimus pro PageRank, který je výpočetně nejméně náročný.
+
+[CODE]
+degree_centrality = nx.degree_centrality(G)
+degree_top_nodes = sorted(degree_centrality.items(), key=lambda x:x[1], reverse=True)
+degree_top_nodes[:10]
+
+[CODE]
+pagerank_centrality = nx.pagerank(G, max_iter=10000)
+pagerank_top_nodes = sorted(pagerank_centrality.items(), key=lambda x:x[1], reverse=True)
+pagerank_top_nodes[:10]
+
+[CODE]
+%%time
+betweenness_centrality = nx.betweenness_centrality(G)
+betweenness_top_nodes = sorted(betweenness_centrality.items(), key=lambda x:x[1], reverse=True)
+betweenness_top_nodes[:10]
+
+[CODE]
+degree_pagerank_comparison = []
+for deg, page, betw in zip(degree_top_nodes, pagerank_top_nodes, betweenness_top_nodes):
+    degree_pagerank_comparison.append([deg[0], page[0], betw[0]])
+centr_comparison_df = pd.DataFrame(degree_pagerank_comparison)
+centr_comparison_df.columns = ["degree_node", "pagerank_node", "betw_node"]
+print(centr_comparison_df.head(20).round(2))
+
+[MARKDOWN]
+V čem je toto srovnání potenciálně zajímavé? Podíváme-li se na pravou stranu tabulky, tj. uzly s největší betweenness centralitou, vidíme, že zejména ve druhé desítce se nachází nemálo uzlů, se kterými se na levé straně (u degree centrality) v první dvacítce vůbec nesetkáváme:
+Jinými slovy, jedná se o uzly, jejichž centralita v rámci sítě není živena výlučně množstvím vazeb, které uvnitř sítě mají, ale spíše specifickým strukturálním postavením.
+Podívejme se tedy na stejná data ještě jiným způsobem a totiž vypišme si, na kolikáté pozici se dvacítka uzlů s nejvyšší beteweenness centrality nachází z hlediska degree centrality.
+
+[CODE]
+for node in centr_comparison_df["betw_node"][:20]:
+    print(node, " degree:", G.degree(node), "degree rank:", [el[0] + 1 for el in enumerate(degree_top_nodes) if el[1][0] == node][0], )
+
+[MARKDOWN]
+Podívejme se nyní čtyři osobnosti:
+* Charles Lyell
+* Francis Galton
+* John Phillips
+* John Lubbock
+
+Jejich degree rank je ve srovnání s jejich betweenness relativně vysoký. Zdá se, že tedy uzly mají v rámci grafu strukturálně zajímovou pozici.
+
+Vytvořme tedy novou vizualizaci, v rámci které zaostříme pozornost právě na 20 uzlů s největší *betweenness*. Tyto uzly vyobrazíme odlišnou barvou a stejnou barvou vyobrazíme i jejich jména. 
+
+[CODE]
+special_nodes = centr_comparison_df["betw_node"][:20] #["Lyell_Charles", "Galton_Francis", "Phillips_John", "Lubbock_John"]
+special_pos = dict([(node, pos[node]) for node in special_nodes])
+labels = {node: node for node in special_nodes}
+
+[CODE]
+fig, ax = plt.subplots(figsize=(24,18), dpi=300)
+special_nodes_color = "darkorange"
+nx.draw(G, node_size=10, node_color="black", edge_color="grey",pos=pos, ax=ax, alpha=0.5)
+nx.draw_networkx_nodes(G, nodelist=special_nodes, node_size=50, node_color=special_nodes_color, pos=special_pos, ax=ax)
+nx.draw_networkx_labels(G, font_color=special_nodes_color, pos=special_pos, labels=labels,ax=ax)
+
+[MARKDOWN]
+Aby byl text čitelný a graf přehledný, vizualizace výše je výrazně větší než ty předchozí. Uložíme si ji do samostatného souboru ve formátu `png`.
+
+[CODE]
+try:
+    fig.savefig("../figures/epsilon_betw.png") # pokud pracujeme s repozitoří jako celkem, včetně podlsožky "figures"
+except:
+    fig.savefig("epsilon_betw.png") # pokud pracujeme s notebookem samostatně, např. přes Google Colab 
+
+[MARKDOWN]
+### Detekce komunit
+
+Další důležitou rodinou algoritmů jsou algoritmy pro detekování komunit, neboli shluků uzlů, které jsou mezi sebou provázány více, než z uzly z jejich okolí. Zde použijeme takzvanou Lovaňskou metodu (podle působiště výzkumníků, kteří ji vyvinuli [viz [wikipedia](https://en.wikipedia.org/wiki/Louvain_method)]). Tento algoritmus se snaží nalézt takové rozdělení uzlů do komunit, které maximalizuje poměr vazeb mezi uzly uvnitř těchto komunit oproti jejich vazbám směrem ven z těchto komunit.
+
+[CODE]
+from networkx.algorithms import community
+communities = nx.community.louvain_communities(G, seed=1)
+len(communities)
+
+[MARKDOWN]
+Algoritmus identifikoval 16 komunit. Podívejme se nejprve, kolik jednotlivé komunity čítají uzlů:
+
+
+[CODE]
+[len(com) for com in communities]
+
+[CODE]
+cmap = plt.get_cmap('viridis')
+colors = [cmap(i) for i in np.linspace(0, 1, len(communities))]
+
+fig, ax = plt.subplots(figsize=(24,18), dpi=300)
+nx.draw_networkx_edges(G, edge_color="grey",pos=pos, alpha=0.5, ax=ax)
+
+for community, color in zip(communities, colors):
+    special_pos = dict([(node, pos[node]) for node in list(community)])
+    #nx.draw(G, node_size=10, node_color="black", edge_color="grey",pos=pos, ax=ax, alpha=0.5)
+    nx.draw_networkx_nodes(G, nodelist=list(community), node_size=10, node_color=[color], pos=special_pos, ax=ax)
+ax.axis('off')
+
+[MARKDOWN]
+Vidíme, že tento algoritmus tedy dokáže velice pěkně zachytit strukturální vlastnosti dané sítě. To je v případě rozsáhlých grafů velice užitečné. 
+
+[MARKDOWN]
+## Alternativní datová sada: CorrespSearch
+
+Alternativně bychom celé cvičení mohli absolvovat za využití mnoha dalších datasetů. Jedním z nich je dataset dostupný přes API na platformě CorrespSearch ([web](https://correspsearch.net/en/home.html)).
+
+[CODE]
+correspsearch = pd.read_csv("https://correspsearch.net/api/v2.0/csv.xql?", sep=";")
+correspsearch.head(10)
+
+[CODE]
+%%time
+for n in range(2,30):
+    page_df = pd.read_csv("https://correspsearch.net/api/v2.0/csv.xql?x=" + str(n), sep=";")
+    correspsearch = pd.concat([correspsearch, page_df])
+    if n in range(0,3000,100):
+        print(n)
+    if len(page_df) < 100:
+        break
+
+[CODE]
+len(correspsearch)
+
+[CODE]
+correspsearch = correspsearch[correspsearch["sender"].notnull() & correspsearch["addressee"].notnull()]
+len(correspsearch)
+
+============================================================
+FILE: tei.ipynb
+============================================================
+
+[MARKDOWN]
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CCS-ZCU/pribehy-dat/blob/master/scripts/tei.ipynb)
+
+Tento soubor je součástí sestavy elektronických studijních opor [Příběhy dat: Výpočetní přístupy ke studiu kultury a společnosti](https://github.com/CCS-ZCU/pribehy-dat/tree/master). 
+
+# TEI-XML: Digitální edice
+
+
+**autor**: *Vojtěch Kaše* (kase@ff.zcu.cz)
+
+[![](https://ccs.zcu.cz/wp-content/uploads/2021/10/cropped-ccs-logo_black_space_240x240.png)](https://ccs.zcu.cz)
+
+[MARKDOWN]
+## Úvod a cíle kapitoly
+
+V této kapitole se budeme věnovat práci s digitálními editacemi vytvořenými podle standardu [TEI-XML](https://tei-c.org). TEI-XML je způsob, jak digitalizované literární dílo veřejně prezentovat tak, aby z něj zejména badatelé a studenti z oblasti humanitních věd mohli získávat hodnotné informace například skrz pokročilé prohlédávání. Za tímto účelem jsou texty v těchto edicích ve větší či menší míře buď ručně nebo polautomaticky anotované. Tím se myslí, že jsou v těchto textech označeny specifické výrazy, jako jsou názvy osob či organizací, místní názvy nebo jiné důležité termíny. Stejně tak jsou v záhlaví těchto dokumentů standardizovaným způsobem uvedena nejrůznější metadata, typicky data o autorovi daného textu, jeho vydavateli apod. Projektů, které dnes využívají tento standard, je obrovské množství. Rozsáhlý (avšak zdaleka ne úplný) výčet lze nalézt [zde](https://tei-c.org/Activities/Projects/). 
+
+Důkladné obeznámení se s těmito standardy by vydalo na celý samostatný kurz. Zde však budeme postupovat obdobně jako v jiných kapitolách a pouze si uvnitř prostředí Jupyter notebooku prohlédneme, jak některé takovéto digitalizované edice vypadají a jak s nimi můžeme pracovat.
+
+TEI-XML je spojení dvou akronymů: TEI = Text Encoding Initiative a XML = Extensible Markup Language.
+ 
+**XML** je definováno jako *rozšiřitelný značkovací jazyk* a stejnojmenný formát souborů využívaný zejména pro výměnu dat mezi aplikacemi a pro publikování dokumentů (viz [wikipedia](https://cs.wikipedia.org/wiki/Extensible_Markup_Language). V mnoha ohledech se běžné XML dokumenty podobají kódu HTML stránek (a jak uvidíme níže, pro práci s nimi se v rámci Pythonu i využívají stejné nástroje). Na rozdíl od HTML stránek však data naformátovaná za využití XML standardu nejsou určena pro webové prohlížeče.
+
+XML soubor sestává z prvků (elementů), které jsou vyznačeny *tagy*, neboli značkami. Tyto tagy jsou vyznačeny pomocí symbolů `<` a `>`, jsou definovány tvůrcem a tvůrce si může vytvářet zcela vlastní tagy. Vždy zde však musí být právě jeden kořenový prvek, tzv. root. V XML je kořenový prvek jedinečný a nemá svůj vlastní obsah, ale pouze obaluje všechny další prvky v dokumentu. 
+
+Tagy mohou a často obsahují atributy, které definují dodatečné vlastnosti příslušných prvků nebo data provazují s dalšími daty, často pomocí hypertextových odkazů. Na rozdíl od HTML musí být v rámci XML všechny tagy tzv. párové. Tag v podobě `<element1>` prvek otvírá a v podobě `</element1>` jej uzavírá. Vše mezi tím je obsahem daného prvku. Prvky se do sebe často vnořují, čímž dokument získává určitou stromovou a navigovatelnou strukturu.
+
+Nejlépe bude struktura xml souboru vidět na následujícím minimalistickém příkladu:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <element1 attribute1="value1">Text for element1</element1>
+    <element2 attribute2="value2">Text for element2</element2>
+</root>
+```
+Inciativa **TEI** přichází se standardy pro to, jak tento formát dat použít pro zveřejňování dokumentů, jako jsou literární díla, básně, rozhovory, dopisy, nápisy, papyry a mnoho dalšího (existuje např. i verze pro obrazová díla či hudební notaci). TEI byla ustavena v roce 1987 s cílem "vyvíjet, udžovat a propagovat metody pro kódování humanitních dat v elektronické podobě nezávislé na konkrétním hardweru a softwaru ("to develop, maintain, and promulgate hardware- and software-independent methods for encoding humanities data in electronic form" - viz [zde](https://tei-c.org/about/history/)).
+
+Veškerý text daného dokumentu se nachází uvnitř prvku `<body></body>`. Ten se může standardizovaným způsoben dále dělit na kapitoly, verše či řádky, či průpovědi jednotlivých mluvčích, v závislosti na žánru daného dokumentu (všechny tyto možnosti jsou detailně popsány v Guidelines [zde](https://tei-c.org/release/doc/tei-p5-doc/en/html/index.html)). Stejně tak jsou jasně nadefinovány způsoby, jak v rámci textu vyznačit výskyty jmenných entit, jako jsou jména osob či místní názvy, nebo například datumy (viz [zde](https://tei-c.org/release/doc/tei-p5-doc/en/html/ND.html). Tyto standardy si ukážeme na konkrétníh příkladech níže. Pro detailnější obeznámení pak doporučiji například online kurz [zde](https://teach.dariah.eu/course/view.php?id=32). Praktický úvodní text v češtině je dostupný [zde](https://digital-humanities.phil.muni.cz/clanky/metadata-co-ma-spolecneho-netflix-a-digitalni-humanitni-vedy).
+
+XML souborový formát se používá i ke standardizovanému metadatovému popisu netextových objektů materiálních artefaktů, jako jsou sbírky výtvarných děl v galeriích, či kolekce archeologických artefaktů v muzijních sbírkách. K tomuto účelu slouží standard [LIDO-XML](https://lido-schema.org/documents/primer/latest/lido-primer.html).
+
+[MARKDOWN]
+## Cvičení
+
+Jak již bylo uvedeno výše, XML dokumenty mají v mnohém obdobné vlastnosti jako webové stránky ve formátu HTML a k práci s nimi lze použít podobné nástroje. Ač TEI-XML dokumenty nejsou určeny pro webové prohlížeče, lze je často nalézt přímo na webu, např. nezřídka jsou také zpřístupňovány pomocí API. V následujícím civčení proto budeme používat v podstatě stejné nástroje jako v případě kapitol o HTTP a websrapingu a využívání API, zejména knihovny `requests` a `BeautifulSoup`.
+
+[CODE]
+import requests
+from bs4 import BeautifulSoup
+
+[MARKDOWN]
+### Korpus německé poezie
+
+Jako první příklad vybereme báseň z korpusu německé poezie **Deutsches Lyrik Korpus** (DLK), dostupného na platformě GitHub [zde](https://github.com/tnhaider/DLK). Jednotlivé básně naformátované ve formě TEI-XML souborů se nachází v této podsložce čítající více než 60,000 položek: https://github.com/tnhaider/DLK/tree/master/DLK/tei/tei_plain.
+
+[MARKDOWN]
+Vybereme náhodný soubor, otevřeme jej, a zobrazíme jej v "raw" podobě (v oknu souboru klikneme v pravém horním rohu). URL adresu souboru v syrové podobě si zkopírujeme a vložíme jako hodnotu proměnné `url` v buňce
+ níže. (Tato url adresa se skládá z informace u umístění souboru v rámci Githubu, která je pro všechny soubory shodná a samotného názvu souboru.)
+
+
+
+
+[CODE]
+url = "https://raw.githubusercontent.com/tnhaider/DLK/master/DLK/tei/tei_plain/dta.poem.10006-Zachariae%2C_Justus_Friedrich_Wilhelm-Die_Vergnügungen_der_Melancholey..tei.xml"
+resp = requests.get(url)
+resp
+
+[MARKDOWN]
+Načtený soubor (v proměnné `resp`) následně parsujeme pomocí knihovny `BeuatifulSoup` do proměnné `soup`, pomocí čehož získáme přístup k stromové struktuře daných dat. Obsah si vypíšeme.
+
+[CODE]
+soup = BeautifulSoup(resp.text)
+soup
+
+[MARKDOWN]
+Vidíme kód s jednotlivými prvky. V samotném úvodu vidíme prvky definující metadata o dané básni: jméno autora uvnitř prvku `<persname>`, do sebe vnořuje ještě dva podprvky `<surname>` a `<lastname>`. Všechna tato metadata se nacházejí uvnitř prvku `<teiheader>`. Po jeho uzavření následuje prvek `<text>`, v níž se nachází text příslušné básně. 
+
+Nejprve z textu vyzískejme základní metadata. Stačí nám pohybovat se po stromové struktuře stejně, jako jsme to činili v kapitole o webscrapingu. Například k názvu literárního díla se dostaneme takto:
+
+[CODE]
+soup.teiheader.title
+
+[MARKDOWN]
+V tomto případě však vidíme i tagy se všemi jejich atributy. Chceme-li samotný textový obsah, musíme použít `text`. Hodnotu si uložíme do proměnné a vypíšeme si ji.
+
+
+
+
+[CODE]
+title = soup.teiheader.title.text
+print(title)
+
+[CODE]
+# Tato buňka slouží ke kontrole průchodu tímto cvičením. 
+# Pokud toto cvičení plníte v rámci svých studijních povinností na ZČU, buňku spusťte a držte se instrukcí.
+exec(requests.get("https://sciencedata.dk/shared/856b0a7402aa7c7258186a8bdb329bd3?download").text)
+kontrola_pruchodu(ntb="tei", arg1=title)
+
+[MARKDOWN]
+Stejně můžeme postupovat v případě dalších prvků:
+
+[CODE]
+author_surname = soup.teiheader.author.surname.text
+author_forename = soup.teiheader.author.forename.text
+
+[MARKDOWN]
+Vypišme si nyní celé jméno autora a příslušné básně.
+
+[CODE]
+print(author_forename, author_surname, "-", title)
+
+[MARKDOWN]
+Pozor, že některé tagy se zde mohou objevovat opakovaně. Pomocí metody výše jsme si vypsali pouze první výskyt daného tagu. Chceme-li vypsat všechny výskyty, musíme na objekt `soup` použít metodu `findall()`. Vyzkoušíme s prvkem `surname`.
+
+[CODE]
+soup.find_all("surname")
+
+[MARKDOWN]
+V případě některých básní budeme mít jmen víc. Je to proto, že je zde ještě příjmení editora dané publikace. Proto jsme výše byli konkrétnější a specifikovali, že se v rámci objektu `soup` pohybujeme v prvku autor.
+
+[MARKDOWN]
+Nyní se přesuňme k textu samotné básně. Ta je v rámci objektu `soup` dostupná v prvku `text`. V nejsyrovější podobě se k textu básně dostaneme takto.
+
+[CODE]
+soup.find("text").get_text() # zde je název tagu "<text>" poněkud matoucí, neboť BeautifulSoup pracuje se stejnojmenným atributem
+
+[MARKDOWN]
+V rámci digitální edice je však báseň dostupná po jednotlivých verších. Pro jednotlivé verše se používá tag `<l>`. Vytvořme si uspořádaný seznam všech veršů:
+
+[CODE]
+verses = [l.text for l in soup.find("text").find_all("l")]
+verses
+
+[MARKDOWN]
+### Dokumenty EHRI
+
+Jako další příklad použijeme digitální edice vydané projektem [EHRI](https://www.ehri-project.eu) (=The European Holocaust Research Infrastructure). EHRI sestává z mnoha podprojektů. Jedním z nich jsou přepisy raných svědectví přeživších holocaustu ([Early Holocaust Testimony](https://early-testimony.ehri-project.eu)). Tyto edice jsou velice důkladně označkovány ohledně vystujících se jmen osob, místních názvů i organizací, jimž jsou přiřazeny jednoznačné identifikátory, které jsou spravovány v samostatných databázích (vocabularies). Jedná se o vzorový příklad tzv. [Linked Open Data](https://www.ontotext.com/knowledgehub/fundamentals/linked-data-linked-open-data/).    
+
+Vyjdeme  z rozcestníku jednotlivých svědectví dostupného [zde](https://early-testimony.ehri-project.eu/search). Digitální edice ve formátu XML je u každého svědectví dostupná ke stažení přes tlačítko v pravém horním rohu. My však nemusíme soubor fyzicky stahovat, pouze si zkopírujeme URL adresu, na kterou tlačítko pro stažení XML směřuje. 
+
+[CODE]
+url = "https://ehri-editions-et.s3.eu-central-1.amazonaws.com/original/34df1a28893a51d05d5909fb3aa99725.xml"
+resp = requests.get(url)
+soup = BeautifulSoup(resp.text, features="xml")
+
+[MARKDOWN]
+Jedná se již o delší dokument. Pro představu o jeho podobě si vypíšeme jeho hlavní části samostatně. Nejprve metadata:
+
+[CODE]
+print(soup.teiHeader.fileDesc)
+
+[MARKDOWN]
+Vidíme tagy s obdobnými názvy jako u dokumentu výše. Popis je však detailnější. Vidíme zde např. i seznamy osob či místních názvů, které se v dokumentu objevují. Nyní se podívejme na samotný textový obsah. Uložme si tuto část stromu do proměnné `textbody`.
+
+[CODE]
+textbody = soup.find("text")
+textbody
+
+[MARKDOWN]
+V textu vidíme vyznačena jména řady osob.
+
+[CODE]
+persnames = textbody.find_all("persName")
+persnames
+
+[MARKDOWN]
+U některých osob vidíme pod atributem "ref" buď URL adresy do dalších autoritativních databází nebo hashtagem vyznačené identifikátory.
+
+[CODE]
+[pers.get("ref") for pers in persnames]
+
+[MARKDOWN]
+Obdobně získáme seznam místních názvů:
+
+[CODE]
+placenames = textbody.find_all("placeName")
+placenames
+
+[MARKDOWN]
+Místa jsou zpravidla klasifikována atributem "typ" na "camp", "ghetto" či např. "subjekt". V případě "camp" (koncentrační tábor) zde nalezneme URL odkaz do databáze koncentračních táborů dostupné [zde](https://portal.ehri-project.eu/vocabularies/ehri_camps). V případě jiných místních jmen je zde odkaz na platformu [GeoNames](https://www.geonames.org), se kterou jsme již pracovali v kapitole o websrapingu.    
+
+[MARKDOWN]
+V některých dokumentech se objevují např. mnohé datumy. V syrovém textu jsou naformátovaná nejrůznějším způsobem, ale v rámci atributu "when" uvnitř tagu jsou dostupná ve strojově čitelné podobě.
+
+[CODE]
+dates = soup.find("text").find_all("date")
+dates
+
+[CODE]
+# datumy ve strojově čitelné podobě:
+[date.get("when") for date in dates]
+
+[MARKDOWN]
+Všechny tyto anotace mohou být použity k rozkrývání vztahů mezi dokumenty a nejrůznějším vizualizacím.
+
+[MARKDOWN]
+### Antická literatura: anglické překlady řeckých textů a řecké originály
+
+Studium antiky obecně, a klasické řecké a latinské literatury zvláště, je dlouhodobě doménou, kde se digitální edice ve formě TEI-XML těší velké oblibě. V současnosti máme takto zpracovanou a volně dostupnou v zásadě veškerou antickou řeckou literaturu, a to díky projektům [Perseus Digital Library](https://www.perseus.tufts.edu/hopper/) a [First1KGreek Project](https://www.perseus.tufts.edu/hopper/), z nichž druhý je pokračováním prvého. Oba projekty průběžně udržují TEI-XML edice jimi zveřejňovaných textů na githubu [zde](https://github.com/PerseusDL/canonical-greekLit) a [zde](https://github.com/OpenGreekAndLatin/First1KGreek). Spolu s řeckými originály jsou v TEI-XML podobě zveřejňovány i anglické překlady.
+
+Podívejme se nyní řecký text Platónova dialogu *Eutyfrón*, patrně jednoho z nejstarších Platónových dialogů, která má relativně přímočarou strukturu: celý text dialogu je tvořen konverzací mezi Sókratem a Eutyfrónem, kteří spolu vedou debatu ohledně podstaty zbožnosti. Text dialogu načteme přímo z Githubu:
+
+[CODE]
+url = "https://raw.githubusercontent.com/PerseusDL/canonical-greekLit/master/data/tlg0059/tlg001/tlg0059.tlg001.perseus-eng2.xml"
+resp = requests.get(url)
+soup = BeautifulSoup(resp.text, features="xml")
+
+[MARKDOWN]
+Přímá řeč je zachycena pomocí prvku `<said>`, jehož atribut "who" definuje řečníka. Díky tomu si můžeme celý dialog rozdělit snadno na slova pronesená Sókratem a slova pronesena Eutyfrónem, přičemž můžeme očekávat, že Platónova názorová pozice bude patrně spíše zachycena v Sókratových slovech.
+
+[CODE]
+said_socrates = [said for said in soup.find_all("said") if said.get("who")=="#Socrates"]
+len(said_socrates)
+
+[CODE]
+# náhodný výběr Sókratových průpovědí
+said_socrates[40:45]
+
+[MARKDOWN]
+Samotná slova mluvčího se však nacházejí až za tagem `<label>`. Kód tedy ještě upravíme tak, abychom dostali pouze text průpovědi bez tohoto tagu.
+
+[CODE]
+said_socrates = [said.contents[-1] for said in soup.find_all("said") if said.get("who")=="#Socrates"]
+said_socrates[40:45]
+
+[CODE]
+said_eutyphro = [said.contents[-1] for said in soup.find_all("said") if said.get("who")=="#Euthyphro"]
+len(said_eutyphro)
+
+[MARKDOWN]
+Může být zajímavé se podívat, jak je v této struktuře zachycen Platónův dialog *Symposion*. Jedná se totiž o dialog nepřímý, vnořený do vcelku komplexního narativního rámce. Dialog je vyprávěný postavou Apollodora v rozhovoru s nejmenovaným společníkem. Hlavní text dialogu je tedy do důsledku vzato přímou řečí, v rámci které se odehrávají další přímé řeči.
+
+[CODE]
+url = "https://raw.githubusercontent.com/PerseusDL/canonical-greekLit/master/data/tlg0059/tlg011/tlg0059.tlg011.perseus-eng2.xml"
+resp = requests.get(url)
+soup = BeautifulSoup(resp.text, features="xml")
+
+[CODE]
+len(soup.find_all("said"))
+
+[CODE]
+said_apollodorus = [said.contents[-1].text for said in soup.find_all("said") if said.get("who")=="#Apollodorus"]
+said_apollodorus[:5]
+
+[MARKDOWN]
+Uvnitř těchto průpovědí se pak nachází text dialogu samotného, sestávající především z jednotlivých řečí na téma boha Eróta. Takto například získáme Faidrovu oslavnou řeč:
+
+[CODE]
+[said.text for said in soup.find_all("said") if said.get("who")=="#Phaedrus"]
+
+[MARKDOWN]
+Podíváme-li se na příslušné místo před začátkem této (178a-b) řeči, můžeme zaznamenat, že Faidrova řeč začíná, aniž by byla průvodní Apollodorova řeč ukončena:
+```xml
+<p><said who="#Apollodorus" rend="merge">
+<milestone ed="P" unit="para"/>First then, as I said, he told me that the speech of Phaedrus began with points of this sort—that Love was a great god, among men and gods a marvel; and this appeared in many ways, but notably in his birth. <milestone unit="section" resp="Stephanus" n="178b"/>
+<said who="#Phaedrus" direct="false">Of the most venerable are the honors of this god, and the proof of it is this:  parents of Love there are none, nor are any recorded in either prose or verse...
+```
+
+Také si zde povšimněme tagu `<milestone>` a jeho atributů, které vyznačují stránkování v rámci kritické edice, které standardně používáme i při citování z českého překladu.
+
+[CODE]
+kontrola_pruchodu(ntb="tei", arg1=url)
+
+[MARKDOWN]
+## Rozšiřující analýza: Řecké originály antické literatury
+
+Digitální edice řeckých originálů se v GitHub repozitoři projektu Perseus nachází ve stejných složkách jako výše použité anglické překlady. Tj. v případě dialogu Eutyfrón: https://github.com/PerseusDL/canonical-greekLit/tree/master/data/tlg0059/tlg001. Všimněme si v této url adrese kódů "tlg0059" a "tlg001". "tlg0059" je standardní identifikátor Platóna napříč různými korpusy, a "tlg001" je taktéž standardní identifikátor dialogu *Eutyfrón* v rámci Platónových děl. Tyto identifikátory proto můžeme použít i jinde. Využijeme zde rozsáhlý automaticky anotovaný korpus řeckých antických textů zvaný GLAUx (k tomu viz [tento](https://aclanthology.org/2021.lchange-1.6/) průvodní text).
+
+Velká část klasických řeckých textů je nyní dostupná i ve formátu, který jde z jazykového hlediska více do detailu a nabízí texty důkladně morfologicky anotované (tzv. *treebanks* [[wikipedia](https://en.wikipedia.org/wiki/Treebank)]). Tím se v zásadě myslí, že jednotlivá slova jsou zde opatřena svým gramatickým určením a příslušný výraz je zde uveden i v základním tvaru, tak jak jej najdeme ve slovníku (např. veškerá podstatná jména jsou v nominativu singuláru apod.). Nejedná si již v pravém smyslu o digitální edice, neboť zde není věnována pozornost obecným metadatům, která lze snadno dohledat jinde. Ale technologie je v zásadě stejná jako výše.
+
+Podívejme se v této podobě opět na dialog Eutyfrón (povšimněme si číselného kódu v názvu souboru). Omezíme se však pouze na několik prvních vět samotného textu.
+
+[CODE]
+url = "https://raw.githubusercontent.com/alekkeersmaekers/glaux/refs/heads/main/xml/0059-001.xml"
+resp = requests.get(url)
+soup = BeautifulSoup(resp.text, features="xml")
+
+[MARKDOWN]
+V této podobě budou naši výchozí jednotkou jednotlivé věty. Ty z dokumentu snadno extrahujeme pomocí vyhledání všech výskytů tagu  `<sentences>`. Obratem si vypíšeme 3 jeho první výskyty.
+
+[CODE]
+sents = soup.find_all("sentence")
+print(sents[:3])
+
+[MARKDOWN]
+Textová data jsou zde zaznamenána tak, že každá věta je zde rozdělena na jednotlivá slova, kterému odpovídá prvek `<word>` v jehož atributech lze nalézt jak slovo v podobě, jak jej najdeme v samotném textu (hodnota atributu "form"), tak ve slovníkové podobě, tzv. "lemma"). Atribut "postag" kóduje tzv. značkování části řeči ("part-of-speech") a atribut "speaker" informaci o mluvčím, tak jak jsme se s ní setkali výše. Všechny tyto atributy jsou velice užitečné a mohou být použity pro nejrůznější jazykové analýzy daných textů, jak z hlediska obsahu, tak stylu či formy. 
+
+Ukážeme si jeden příklad: První písmeno atributu "postag" definuje slovní druh a písmeno "n" značí podstatné jméno ("noun"). Když toto víme, tak pomocí kódu níže z daného textu vypíšeme lemmata všech podstatných jmen, které se v něm vyskytují. 
+
+[CODE]
+nouns = [word["lemma"] for word in soup.find_all("word") if word["postag"][0]=="n"]
+nouns[:10]
+
+[MARKDOWN]
+Slova v této podobě bychom nyní mohli podrobit nejrůznějším kvantitativním analýzám. To si však necháme do samostatné kapitoly, kde si tyto metody ozkoušíme na textových datech v češtině, která však do obdobné podoby budeme zpracovávat jinými způsoby než tak, že bychom je přímo extrahovali z již zveřejněného korpusu.
+
+[MARKDOWN]
+### Britská poezie 19. století
+
+Pokud nás zajímá poezie, můžeme si samostatně vyzkoušet práci s velice důkladnými digitálními edicemi britské poezie dostupnými [zde](https://www.eighteenthcenturypoetry.org/authors/). Postup bude obdobný jako v předchozích příkladech. 

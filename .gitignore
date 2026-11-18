@@ -15,3 +15,16 @@
 .npm/
 .idea/
 .DS_Store
+
+# --- workflow housekeeping ---
+.idea_modules/
+.fleet/
+*.iml
+*.iws
+*.ipr
+.ipynb_checkpoints/
+large_files/
+large_data/
+# --- workflow housekeeping: bulk data is never committed ---
+large_files/
+large_data/
